@@ -57,7 +57,7 @@ var AppUI = (() => {
               ${m.totalBars} ${t} | ${totalLength}mm + ${totalKerf}mm
             </p>
             <p class="font-semibold">
-             Còn lại  ${waste}mm
+             Còn lại ${waste}mm
             </p>
           </div>
           ${m.bars.map((b) => `
