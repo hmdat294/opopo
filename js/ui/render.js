@@ -12,8 +12,8 @@ var AppUI = (() => {
     const lengthMm = Number(document.getElementById(`segLength_${setId}`).value);
     const quantity = Number(document.getElementById(`segQty_${setId}`).value);
     const segmentType = document.getElementById(`segType_${setId}`).value === "do" ? "do" : "vach";
-    if (!lengthMm || lengthMm <= 0 || lengthMm > BAR_LENGTH_MM) return alert(`Chieu dai 1-${BAR_LENGTH_MM}mm.`);
-    if (!quantity || quantity <= 0) return alert("So luong > 0.");
+    if (!lengthMm || lengthMm <= 0 || lengthMm > BAR_LENGTH_MM) return alert(`Chiều dài 1-${BAR_LENGTH_MM}mm.`);
+    if (!quantity || quantity <= 0) return alert("Số lượng > 0.");
     window.CustomerController.addSegment(customerId, setId, lengthMm, quantity, segmentType);
   }
 
@@ -87,7 +87,7 @@ var AppUI = (() => {
 
   function render() {
     const root = document.getElementById("customersContainer");
-    if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border bg-white p-3 text-center text-sm">Trong.</div>`);
+    if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border bg-white p-3 text-center text-sm">Trống.</div>`);
     root.innerHTML = appState.customers.map((c) => {
       const hasSeg = c.sets.some((s) => s.segments.some((g) => Number(g.lengthMm) > 0 && Number(g.quantity) > 0));
       return `<div class="mb-4 rounded border bg-white p-3">
