@@ -24,8 +24,23 @@ var AppUI = (() => {
     const r = window.OptimizationService.optimizeBars(customer);
     if (r.error) return void (holder.innerHTML = `<div class="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-500">${esc(r.error)}</div>`);
 
+    const BAR = 5800;
+
+    const weight = {
+      'vách C3209': 4.651,
+      'đố C3203': 5.511,
+      'nẹp C3295': 1.572
+    };
+
+    const calcWeight = (type, m) =>
+      (weight[type] || 0) * (m?.totalBars || 0);
+
+    const totalWeight =
+      calcWeight("vách C3209", r.aluminumVach) +
+      calcWeight("đố C3203", r.aluminumDo) +
+      calcWeight("nẹp C3295", r.bead);
+
     const mk = (t, m, c) => {
-      const BAR = 5800;
       const { totalLength, totalKerf } = m.bars.reduce(
         (acc, b) => {
           const pieces = b.pieces || [];
@@ -50,13 +65,13 @@ var AppUI = (() => {
       const totalCapacity = barsNeeded * BAR;
       const waste = totalCapacity - totalWithKerf;
 
-      return `
+      return m.totalBars == 0 ? `` : `
         <div class="rounded border p-2">
           <div class="flex justify-between">
-            <p class="font-semibold">
-              ${m.totalBars} ${t} | ${totalLength}mm + ${totalKerf}mm
+            <p class="font-normal">
+              ${m.totalBars} ${t} | ${totalLength}mm + ${totalKerf}mm | ${weight[t] * m.totalBars}kg
             </p>
-            <p class="font-semibold">
+            <p class="font-normal">
              Còn lại ${waste}mm
             </p>
           </div>
@@ -72,16 +87,17 @@ var AppUI = (() => {
               </div>
             </div>
           `).join("")}
-        </div>
-      `;
+        </div>`;
     };
 
     holder.innerHTML =
-      `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-sm">
-        Tổng ${r.totalBars} thanh</div><div class="mt-2 space-y-2">
-        ${mk("vách", r.aluminumVach, "bg-blue-500")}
-        ${mk("đố", r.aluminumDo, "bg-indigo-600")}
-        ${mk("nẹp", r.bead, "bg-emerald-500")}
+      `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-sm font-normal">
+        Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg
+      </div>  
+      <div class="mt-2 space-y-2">
+        ${mk("vách C3209", r.aluminumVach, "bg-blue-500")}
+        ${mk("đố C3203", r.aluminumDo, "bg-indigo-600")}
+        ${mk("nẹp C3295", r.bead, "bg-emerald-500")}
       </div>`;
   }
 
