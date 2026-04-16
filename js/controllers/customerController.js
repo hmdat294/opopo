@@ -54,7 +54,7 @@ const CustomerController = (() => {
             id: uid("seg"),
             lengthMm: safeLength,
             quantity: Number(quantity) || 0,
-            segmentType: segmentType === "do" ? "do" : "vach"
+            segmentType: segmentType
         });
         saveState();
         window.AppUI.render();
@@ -69,7 +69,7 @@ const CustomerController = (() => {
             const numericValue = Number(value) || 0;
             segment[field] = Math.min(numericValue, BAR_LENGTH_MM);
         } else if (field === "segmentType") {
-            segment[field] = value === "do" ? "do" : "vach";
+            segment[field] = value;
         } else {
             const numericValue = Number(value) || 0;
             segment[field] = numericValue;

@@ -20,7 +20,7 @@ const AppData = (() => {
                     id: segment.id || uid("seg"),
                     lengthMm: Number(segment.lengthMm) || 0,
                     quantity: Number(segment.quantity) || 0,
-                    segmentType: segment.segmentType === "do" ? "do" : "vach"
+                    segmentType: segment.segmentType
                 })) : []
             })) : []
         };

@@ -11,7 +11,7 @@ var AppUI = (() => {
   function handleAddSegment(customerId, setId) {
     const lengthMm = Number(document.getElementById(`segLength_${setId}`).value);
     const quantity = Number(document.getElementById(`segQty_${setId}`).value);
-    const segmentType = document.getElementById(`segType_${setId}`).value === "do" ? "do" : "vach";
+    const segmentType = String(document.getElementById(`segType_${setId}`).value);
     if (!lengthMm || lengthMm <= 0 || lengthMm > BAR_LENGTH_MM) return alert(`Chiều dài 1-${BAR_LENGTH_MM}mm.`);
     if (!quantity || quantity <= 0) return alert("Số lượng > 0.");
     window.CustomerController.addSegment(customerId, setId, lengthMm, quantity, segmentType);
@@ -25,11 +25,20 @@ var AppUI = (() => {
     if (r.error) return void (holder.innerHTML = `<div class="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-500">${esc(r.error)}</div>`);
 
     const BAR = 5800;
+    const unit_price = 148000;
+    const formatted = (money) => new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(money);
 
     const weight = {
       'vách C3209': 4.651,
       'đố C3203': 5.511,
-      'nẹp C3295': 1.572
+      'nẹp C3295': 1.572,
+      'khung cửa đi C3328': 7.291,
+      'cánh cửa đi C3303': 8.358,
+      'khung cửa sổ C3318': 5.081,
+      'cánh cửa sổ C8092': 6.171,
     };
 
     const calcWeight = (type, m) =>
@@ -38,6 +47,10 @@ var AppUI = (() => {
     const totalWeight =
       calcWeight("vách C3209", r.aluminumVach) +
       calcWeight("đố C3203", r.aluminumDo) +
+      calcWeight("khung cửa đi C3328", r.aluminumKhungCD) +
+      calcWeight("cánh cửa đi C3303", r.aluminumCanhCD) +
+      calcWeight("khung cửa sổ C3318", r.aluminumKhungCS) +
+      calcWeight("cánh cửa sổ C8092", r.aluminumCanhCS) +
       calcWeight("nẹp C3295", r.bead);
 
     const mk = (t, m, c) => {
@@ -91,12 +104,17 @@ var AppUI = (() => {
     };
 
     holder.innerHTML =
-      `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-sm font-normal">
-        Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg
+      `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-md font-medium flex justify-between items-center">
+        <p>Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg</p>
+        <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
         ${mk("vách C3209", r.aluminumVach, "bg-blue-500")}
-        ${mk("đố C3203", r.aluminumDo, "bg-indigo-600")}
+        ${mk("đố C3203", r.aluminumDo, "bg-indigo-500")}
+        ${mk("khung cửa đi C3328", r.aluminumKhungCD, "bg-red-500")}
+        ${mk("cánh cửa đi C3303", r.aluminumCanhCD, "bg-pink-500")}
+        ${mk("khung cửa sổ C3318", r.aluminumKhungCS, "bg-yellow-500")}
+        ${mk("cánh cửa sổ C8092", r.aluminumCanhCS, "bg-green-500")}
         ${mk("nẹp C3295", r.bead, "bg-emerald-500")}
       </div>`;
   }
@@ -161,6 +179,10 @@ var AppUI = (() => {
                 <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/4">
                   <option value="vach">Vách</option>
                   <option value="do">Đố</option>
+                  <option value="khung_cd">Khung CĐ</option>
+                  <option value="canh_cd">Cánh CĐ</option>
+                  <option value="khung_cs">Khung CS</option>
+                  <option value="canh_cs">Cánh CS</option>
                 </select>
                 <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -193,6 +215,10 @@ var AppUI = (() => {
                             <select onchange="updateSegment('${c.id}','${s.id}','${g.id}','segmentType',this.value)" class="rounded border px-2 py-1 w-full">
                               <option value="vach" ${g.segmentType === "vach" ? "selected" : ""}>Vách</option>
                               <option value="do" ${g.segmentType === "do" ? "selected" : ""}>Đố</option>
+                              <option value="khung_cd" ${g.segmentType === "khung_cd" ? "selected" : ""}>Khung CĐ</option>
+                              <option value="canh_cd" ${g.segmentType === "canh_cd" ? "selected" : ""}>Cánh CĐ</option>
+                              <option value="khung_cs" ${g.segmentType === "khung_cs" ? "selected" : ""}>Khung CS</option>
+                              <option value="canh_cs" ${g.segmentType === "canh_cs" ? "selected" : ""}>Cánh CS</option>
                             </select>
                           </td>
                           <td class="">
