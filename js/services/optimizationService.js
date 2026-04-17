@@ -123,7 +123,6 @@ const OptimizationService = (() => {
 
     function optimizeBars(customer) {
 
-
         const {
             aluminumVachPieces,
             aluminumDoPieces,
