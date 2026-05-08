@@ -128,17 +128,18 @@ var AppUI = (() => {
       const hasSeg = c.sets.some((s) => s.segments.some((g) => Number(g.lengthMm) > 0 && Number(g.quantity) > 0));
       return `<div class="mb-4 rounded border bg-white p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
         <div class="flex items-center justify-between">
-          <b>Tên: ${esc(c.name)}</b>
+          <b class="cursor-pointer" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
           <div class="flex gap-2">
             ${hasSeg && !c.isCollapsed ?
-          `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">Tổng số thanh</button>` : ""}
+            `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
+              Tổng số thanh
+            </button>` : ""}
             <button class="rounded bg-emerald-500 px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
               ${c.isCollapsed ?
-          `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-              </svg>`
-          :
-          `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                  </svg>`
+              :`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
               </svg>`}
             </button>
@@ -208,10 +209,13 @@ var AppUI = (() => {
                     <tbody>
                       ${s.segments.map((g) => `
                         <tr>
-                          <td class="w-7/12">
-                            <input type="number" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}" onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="w-full rounded border px-2 py-1">
+                          <td class="w-full flex gap-2">
+                            <input type="range" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}"
+                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="w-full">
+                            <input type="number" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}" 
+                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="rounded border px-2 py-1">F
                           </td>
-                          <td class="w-2/12 px-2">
+                          <td class="px-2">
                             <input type="number" min="1" value="${Number(g.quantity) || 0}" onchange="updateSegment('${c.id}','${s.id}','${g.id}','quantity',this.value)" class="w-full rounded border px-2 py-1">
                           </td>
                           <td class="w-3/12 pr-2">
