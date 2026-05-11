@@ -213,7 +213,7 @@ var AppUI = (() => {
                             <input type="range" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}"
                               onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="w-full">
                             <input type="number" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}" 
-                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="rounded border px-2 py-1">F
+                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="rounded border px-2 py-1">
                           </td>
                           <td class="px-2">
                             <input type="number" min="1" value="${Number(g.quantity) || 0}" onchange="updateSegment('${c.id}','${s.id}','${g.id}','quantity',this.value)" class="w-full rounded border px-2 py-1">
