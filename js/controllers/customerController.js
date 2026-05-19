@@ -96,6 +96,21 @@ const CustomerController = (() => {
         return set.segments.reduce((sum, segment) => sum + (Number(segment.quantity) || 0), 0);
     }
 
+    function addAluminum(name, code, weightPerMeter) {
+        const aluminum = window.AluminumService.addAluminum(name, code, weightPerMeter);
+        return aluminum;
+    }
+
+    function deleteAluminum(aluminumId) {
+        window.AluminumService.deleteAluminum(aluminumId);
+        window.AppUI.renderAluminumList();
+    }
+
+    function editAluminum(aluminumId, name, code, weightPerMeter) {
+        window.AluminumService.updateAluminum(aluminumId, name, code, weightPerMeter);
+        window.AppUI.renderAluminumList();
+    }
+
     return {
         createCustomer,
         deleteCustomer,
@@ -106,7 +121,10 @@ const CustomerController = (() => {
         updateSegment,
         deleteSegment,
         resetAll,
-        getSetTotalQty
+        getSetTotalQty,
+        addAluminum,
+        deleteAluminum,
+        editAluminum
     };
 })();
 

@@ -33,29 +33,26 @@ var AppUI = (() => {
       currency: 'VND'
     }).format(money);
 
-    const weight = {
-      'vách C3209': 4.651,
-      'đố C3203': 5.511,
-      'nẹp C3295': 1.572,
-      'khung cửa đi C3328': 7.291,
-      'cánh cửa đi C3303': 8.358,
-      'khung cửa sổ C3318': 5.081,
-      'cánh cửa sổ C8092': 6.171,
-    };
+    // Lấy dữ liệu nhôm từ AluminumService
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    const weight = {};
+    aluminumTypes.forEach(a => {
+      weight[a.code] = a.weightPerMeter;
+    });
 
     const calcWeight = (type, m) =>
       (weight[type] || 0) * (m?.totalBars || 0);
 
     const totalWeight =
-      calcWeight("vách C3209", r.aluminumVach) +
-      calcWeight("đố C3203", r.aluminumDo) +
-      calcWeight("khung cửa đi C3328", r.aluminumKhungCD) +
-      calcWeight("cánh cửa đi C3303", r.aluminumCanhCD) +
-      calcWeight("khung cửa sổ C3318", r.aluminumKhungCS) +
-      calcWeight("cánh cửa sổ C8092", r.aluminumCanhCS) +
-      calcWeight("nẹp C3295", r.bead);
+      calcWeight("C3209", r.aluminumVach) +
+      calcWeight("C3203", r.aluminumDo) +
+      calcWeight("C3328", r.aluminumKhungCD) +
+      calcWeight("C3303", r.aluminumCanhCD) +
+      calcWeight("C3318", r.aluminumKhungCS) +
+      calcWeight("C8092", r.aluminumCanhCS) +
+      calcWeight("C3295", r.bead);
 
-    const mk = (t, m, c) => {
+    const mk = (name, code, m, c) => {
       const { totalLength, totalKerf } = m.bars.reduce(
         (acc, b) => {
           const pieces = b.pieces || [];
@@ -84,7 +81,7 @@ var AppUI = (() => {
         <div class="rounded border p-2">
           <div class="flex justify-between">
             <p class="font-normal">
-              ${m.totalBars} ${t} | ${totalLength}mm + ${totalKerf}mm | ${weight[t] * m.totalBars}kg
+              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${weight[code] * m.totalBars}kg
             </p>
             <p class="font-normal">
              Còn lại ${waste}mm
@@ -111,14 +108,45 @@ var AppUI = (() => {
         <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
-        ${mk("vách C3209", r.aluminumVach, "bg-blue-500")}
-        ${mk("đố C3203", r.aluminumDo, "bg-indigo-500")}
-        ${mk("khung cửa đi C3328", r.aluminumKhungCD, "bg-red-500")}
-        ${mk("cánh cửa đi C3303", r.aluminumCanhCD, "bg-pink-500")}
-        ${mk("khung cửa sổ C3318", r.aluminumKhungCS, "bg-yellow-500")}
-        ${mk("cánh cửa sổ C8092", r.aluminumCanhCS, "bg-green-500")}
-        ${mk("nẹp C3295", r.bead, "bg-emerald-500")}
+        ${mk("vách C3209", "C3209", r.aluminumVach, "bg-blue-500")}
+        ${mk("đố C3203", "C3203", r.aluminumDo, "bg-indigo-500")}
+        ${mk("khung cửa đi C3328", "C3328", r.aluminumKhungCD, "bg-red-500")}
+        ${mk("cánh cửa đi C3303", "C3303", r.aluminumCanhCD, "bg-pink-500")}
+        ${mk("khung cửa sổ C3318", "C3318", r.aluminumKhungCS, "bg-yellow-500")}
+        ${mk("cánh cửa sổ C8092", "C8092", r.aluminumCanhCS, "bg-green-500")}
+        ${mk("nẹp C3295", "C3295", r.bead, "bg-emerald-500")}
       </div>`;
+  }
+
+  function renderAluminumList() {
+    const container = document.getElementById("aluminumList");
+    if (!container) return;
+
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+
+    if (aluminumTypes.length === 0) {
+      container.innerHTML = `<div class="text-center text-sm text-slate-500 italic">Chưa có loại nhôm nào.</div>`;
+      return;
+    }
+
+    container.innerHTML = aluminumTypes.map(a => `
+      <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-200">
+        <div class="flex-1">
+          <p class="font-medium">${esc(a.name)}</p>
+          <p class="text-sm text-slate-600">Mã: ${esc(a.code)} | Cân nặng: ${a.weightPerMeter} kg/m</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="rounded bg-red-500 px-3 py-1 text-sm text-white" onclick="deleteAluminum('${a.id}')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+            Xóa
+          </button>
+        </div>
+      </div>
+    `).join("");
   }
 
   function render() {
@@ -251,7 +279,7 @@ var AppUI = (() => {
     }).join("");
   }
 
-  return { render, renderOptimization, handleAddSet, handleAddSegment };
+  return { render, renderOptimization, handleAddSet, handleAddSegment, renderAluminumList };
 })();
 
 window.AppUI = AppUI;

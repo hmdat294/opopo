@@ -1,0 +1,46 @@
+{
+  "aluminumTypes": [
+    {
+      "id": "alum_1",
+      "name": "vách C3209",
+      "code": "C3209",
+      "weightPerMeter": 4.651
+    },
+    {
+      "id": "alum_2",
+      "name": "đố C3203",
+      "code": "C3203",
+      "weightPerMeter": 5.511
+    },
+    {
+      "id": "alum_3",
+      "name": "nẹp C3295",
+      "code": "C3295",
+      "weightPerMeter": 1.572
+    },
+    {
+      "id": "alum_4",
+      "name": "khung cửa đi C3328",
+      "code": "C3328",
+      "weightPerMeter": 7.291
+    },
+    {
+      "id": "alum_5",
+      "name": "cánh cửa đi C3303",
+      "code": "C3303",
+      "weightPerMeter": 8.358
+    },
+    {
+      "id": "alum_6",
+      "name": "khung cửa sổ C3318",
+      "code": "C3318",
+      "weightPerMeter": 5.081
+    },
+    {
+      "id": "alum_7",
+      "name": "cánh cửa sổ C8092",
+      "code": "C8092",
+      "weightPerMeter": 6.171
+    }
+  ]
+}
