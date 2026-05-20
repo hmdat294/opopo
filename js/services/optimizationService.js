@@ -56,56 +56,61 @@ const OptimizationService = (() => {
         const aluminumCanhCDPieces = [];
         const aluminumKhungCSPieces = [];
         const aluminumCanhCSPieces = [];
-        const beadPieces = [];
+        const beadPieces = {};
+
+        // Mapping từ code sang pieces array
+        const codeToArrayMap = {
+            "C3209": aluminumVachPieces,
+            "C3203": aluminumDoPieces,
+            "C3328": aluminumKhungCDPieces,
+            "C3303": aluminumCanhCDPieces,
+            "C3318": aluminumKhungCSPieces,
+            "C8092": aluminumCanhCSPieces
+        };
+
+        // Lấy AluminumService để tìm profileCount
+        const aluminumService = window.AluminumService;
 
         customer.sets.forEach((set) => {
             set.segments.forEach((segment) => {
                 const lengthMm = Number(segment.lengthMm) || 0;
                 const quantity = Number(segment.quantity) || 0;
-                const segmentType = segment.segmentType;
+                const aluminumCode = segment.segmentType;
                 if (lengthMm <= 0 || quantity <= 0) return;
 
+                // Lấy array tương ứng với code nhôm
+                const targetAluminum = codeToArrayMap[aluminumCode];
+                if (!targetAluminum) return;
+
+                // Thêm pieces vào array tương ứng
                 for (let i = 0; i < quantity; i += 1) {
-
-                    const map = {
-                        vach: aluminumVachPieces,
-                        do: aluminumDoPieces,
-                        khung_cd: aluminumKhungCDPieces,
-                        canh_cd: aluminumCanhCDPieces,
-                        khung_cs: aluminumKhungCSPieces,
-                        canh_cs: aluminumCanhCSPieces
-                    };
-
-                    const targetAluminum = map[segmentType];
-
-                    if (!targetAluminum) return;
-
                     targetAluminum.push({
                         setName: set.name,
-                        sourceType: segmentType,
+                        sourceType: aluminumCode,
                         lengthMm,
                         usedMm: lengthMm + EFFECTIVE_KERF_MM
                     });
                 }
 
-                const beadMap = {
-                    vach: 1,
-                    do: 2,
-                    khung_cd: 0,
-                    canh_cd: 1,
-                    khung_cs: 0,
-                    canh_cs: 1
-                };
+                // Thêm bead pieces dựa vào profileCount
+                const aluminum = aluminumService.getAluminumByCode(aluminumCode);
+                const profileCount = aluminum?.profileCount || 0;
 
-                const beadMultiplier = beadMap[segmentType] ?? 1;
-                
-                for (let i = 0; i < quantity * beadMultiplier; i += 1) {
-                    beadPieces.push({
-                        setName: set.name,
-                        sourceType: segmentType,
-                        lengthMm,
-                        usedMm: lengthMm + EFFECTIVE_KERF_MM
-                    });
+                // Tạo nẹp riêng cho mỗi profile
+                for (let beadIdx = 1; beadIdx <= profileCount; beadIdx++) {
+                    const beadCode = `${aluminumCode}_bead_${beadIdx}`;
+                    if (!beadPieces[beadCode]) {
+                        beadPieces[beadCode] = [];
+                    }
+                    
+                    for (let i = 0; i < quantity; i += 1) {
+                        beadPieces[beadCode].push({
+                            setName: set.name,
+                            sourceType: beadCode,
+                            lengthMm,
+                            usedMm: lengthMm + EFFECTIVE_KERF_MM
+                        });
+                    }
                 }
             });
         });
@@ -139,18 +144,31 @@ const OptimizationService = (() => {
         const aluminumCanhCD = optimizePieceList(aluminumCanhCDPieces, "Canh cua di");
         const aluminumKhungCS = optimizePieceList(aluminumKhungCSPieces, "Khung cua so");
         const aluminumCanhCS = optimizePieceList(aluminumCanhCSPieces, "Canh cua so");
-        const bead = optimizePieceList(beadPieces, "Nep");
 
-        const hasError = [
+        // Xử lý bead pieces
+        const beadResults = {};
+        let totalBeadBars = 0;
+        let totalBeadPieces = 0;
+        Object.entries(beadPieces).forEach(([beadCode, beadArray]) => {
+            const beadResult = optimizePieceList(beadArray, beadCode);
+            if (beadResult.error) {
+                throw new Error(`${beadResult.label}: ${beadResult.error}`);
+            }
+            beadResults[beadCode] = beadResult;
+            totalBeadBars += beadResult.totalBars;
+            totalBeadPieces += beadResult.totalPieces;
+        });
+
+        const mainResults = [
             aluminumVach,
             aluminumDo,
             aluminumKhungCD,
             aluminumCanhCD,
             aluminumKhungCS,
-            aluminumCanhCS,
-            bead
-        ].find((item) => item.error);
+            aluminumCanhCS
+        ];
 
+        const hasError = mainResults.find((item) => item.error);
         if (hasError) return { error: `${hasError.label}: ${hasError.error}` };
 
         const totalBars =
@@ -160,7 +178,7 @@ const OptimizationService = (() => {
             aluminumCanhCD.totalBars +
             aluminumKhungCS.totalBars +
             aluminumCanhCS.totalBars +
-            bead.totalBars;
+            totalBeadBars;
 
         const totalPieces =
             aluminumVach.totalPieces +
@@ -169,9 +187,9 @@ const OptimizationService = (() => {
             aluminumCanhCD.totalPieces +
             aluminumKhungCS.totalPieces +
             aluminumCanhCS.totalPieces +
-            bead.totalPieces;
+            totalBeadPieces;
 
-        return {
+        const result = {
             kerfUsedMm: EFFECTIVE_KERF_MM,
             totalBars,
             totalPieces,
@@ -181,8 +199,10 @@ const OptimizationService = (() => {
             aluminumCanhCD,
             aluminumKhungCS,
             aluminumCanhCS,
-            bead
+            ...beadResults
         };
+
+        return result;
     }
 
     return {

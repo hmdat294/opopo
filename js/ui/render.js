@@ -2,6 +2,13 @@ var AppUI = (() => {
   const { appState, BAR_LENGTH_MM, findCustomer } = window.AppData;
   const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+  function getAluminumSelectOptions(selectedValue = "") {
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    return aluminumTypes.map(a => 
+      `<option value="${a.code}" ${selectedValue === a.code ? "selected" : ""}>${esc(a.name)}</option>`
+    ).join("");
+  }
+
   function handleAddSet(customerId) {
     const name = document.getElementById(`setInput_${customerId}`).value.trim();
     if (!name) return alert("Nhập tên bộ.");
@@ -40,19 +47,47 @@ var AppUI = (() => {
       weight[a.code] = a.weightPerMeter;
     });
 
-    const calcWeight = (type, m) =>
-      (weight[type] || 0) * (m?.totalBars || 0);
+    // Helper để lấy base code (ví dụ: "C3209_bead_1" → "C3209")
+    function getBaseCode(sourceType) {
+      const parts = sourceType.split("_bead_");
+      return parts[0];
+    }
 
-    const totalWeight =
-      calcWeight("C3209", r.aluminumVach) +
-      calcWeight("C3203", r.aluminumDo) +
-      calcWeight("C3328", r.aluminumKhungCD) +
-      calcWeight("C3303", r.aluminumCanhCD) +
-      calcWeight("C3318", r.aluminumKhungCS) +
-      calcWeight("C8092", r.aluminumCanhCS) +
-      calcWeight("C3295", r.bead);
+    // Palette màu và cache
+    const colorPalette = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-cyan-500",
+      "bg-orange-500", "bg-teal-500", "bg-lime-500", "bg-sky-500"
+    ];
+    const colorCache = {};
+
+    function getColorForCode(code) {
+      if (!colorCache[code]) {
+        const randomIndex = Math.floor(Math.random() * colorPalette.length);
+        colorCache[code] = colorPalette[randomIndex];
+      }
+      return colorCache[code];
+    }
+
+    const calcWeight = (type, m) => {
+      const baseCode = getBaseCode(type);
+      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+    };
+
+    // Tính tổng weight từ tất cả kết quả
+    const totalWeight = Object.values(r)
+      .filter(item => item && item.bars && Array.isArray(item.bars))
+      .reduce((sum, item) => {
+        // Tìm code từ pieces
+        const firstPiece = item.bars[0]?.pieces?.[0];
+        if (firstPiece) {
+          return sum + calcWeight(firstPiece.sourceType, item);
+        }
+        return sum;
+      }, 0);
 
     const mk = (name, code, m, c) => {
+      const baseCode = getBaseCode(code);
       const { totalLength, totalKerf } = m.bars.reduce(
         (acc, b) => {
           const pieces = b.pieces || [];
@@ -81,7 +116,7 @@ var AppUI = (() => {
         <div class="rounded border p-2">
           <div class="flex justify-between">
             <p class="font-normal">
-              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${weight[code] * m.totalBars}kg
+              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${(weight[baseCode] * BAR_LENGTH_MM * m.totalBars / 1000000).toFixed(3)}kg
             </p>
             <p class="font-normal">
              Còn lại ${waste}mm
@@ -108,13 +143,25 @@ var AppUI = (() => {
         <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
-        ${mk("vách C3209", "C3209", r.aluminumVach, "bg-blue-500")}
-        ${mk("đố C3203", "C3203", r.aluminumDo, "bg-indigo-500")}
-        ${mk("khung cửa đi C3328", "C3328", r.aluminumKhungCD, "bg-red-500")}
-        ${mk("cánh cửa đi C3303", "C3303", r.aluminumCanhCD, "bg-pink-500")}
-        ${mk("khung cửa sổ C3318", "C3318", r.aluminumKhungCS, "bg-yellow-500")}
-        ${mk("cánh cửa sổ C8092", "C8092", r.aluminumCanhCS, "bg-green-500")}
-        ${mk("nẹp C3295", "C3295", r.bead, "bg-emerald-500")}
+        ${Object.values(r)
+          .filter(item => item && item.bars && Array.isArray(item.bars) && item.totalBars > 0)
+          .map(item => {
+            const firstPiece = item.bars[0]?.pieces?.[0];
+            const sourceType = firstPiece?.sourceType;
+            const baseCode = getBaseCode(sourceType);
+            const alum = aluminumTypes.find(a => a.code === baseCode);
+            
+            let name = "";
+            if (sourceType.includes("_bead_")) {
+              const beadIndex = sourceType.split("_bead_")[1];
+              name = `nẹp của ${alum?.name || baseCode} (${beadIndex})`;
+            } else {
+              name = alum?.name || sourceType || "Không xác định";
+            }
+            
+            const color = getColorForCode(sourceType);
+            return mk(name, sourceType, item, color);
+          }).join("")}
       </div>`;
   }
 
@@ -178,12 +225,7 @@ var AppUI = (() => {
                 <input id="segLength_${s.id}" type="number" min="1" max="${BAR_LENGTH_MM}" placeholder="Chiều dài (mm)" class="rounded border px-2 py-1 w-full">
                 <input id="segQty_${s.id}" type="number" min="1" value="1" class="rounded border px-2 py-1 w-1/6">
                 <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/4">
-                  <option value="vach">Vách</option>
-                  <option value="do">Đố</option>
-                  <option value="khung_cd">Khung CĐ</option>
-                  <option value="canh_cd">Cánh CĐ</option>
-                  <option value="khung_cs">Khung CS</option>
-                  <option value="canh_cs">Cánh CS</option>
+                  ${getAluminumSelectOptions()}
                 </select>
                 <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -217,12 +259,7 @@ var AppUI = (() => {
                           </td>
                           <td class="w-3/12 pr-2">
                             <select onchange="updateSegment('${c.id}','${s.id}','${g.id}','segmentType',this.value)" class="rounded border px-2 py-1 w-full">
-                              <option value="vach" ${g.segmentType === "vach" ? "selected" : ""}>Vách</option>
-                              <option value="do" ${g.segmentType === "do" ? "selected" : ""}>Đố</option>
-                              <option value="khung_cd" ${g.segmentType === "khung_cd" ? "selected" : ""}>Khung CĐ</option>
-                              <option value="canh_cd" ${g.segmentType === "canh_cd" ? "selected" : ""}>Cánh CĐ</option>
-                              <option value="khung_cs" ${g.segmentType === "khung_cs" ? "selected" : ""}>Khung CS</option>
-                              <option value="canh_cs" ${g.segmentType === "canh_cs" ? "selected" : ""}>Cánh CS</option>
+                              ${getAluminumSelectOptions(g.segmentType)}
                             </select>
                           </td>
                           <td class="">
