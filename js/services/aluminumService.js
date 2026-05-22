@@ -1,28 +1,19 @@
 const AluminumService = (() => {
     let aluminumTypes = [];
     
-    // JSONBin configuration
-    const JSONBIN_BIN_ID = '6a0fd8eaee5a733b12fd2029';
-    const JSONBIN_KEY = '$2a$10$UYIF4qD14K7VjKd.t7YRduvRNGS2JVp4OHtjxfTJi8Un9/o3cn7wO';
-    const JSONBIN_URL = `http://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
-
-    const headers = {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_KEY
-    };
+    // API endpoint (dùng serverless function làm proxy)
+    const API_URL = '/api/aluminumTypes';
 
     async function loadAluminumTypes() {
         try {
-            const response = await fetch(JSONBIN_URL, {
+            const response = await fetch(API_URL, {
                 method: 'GET',
                 headers: {
-                    'X-Master-Key': JSONBIN_KEY
+                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            // JSONBin returns { record: {...}, metadata: {...} }
-            aluminumTypes = data.record?.aluminumTypes || [];
+            aluminumTypes = await response.json();
         } catch (error) {
             console.error('Lỗi khi tải dữ liệu nhôm:', error);
             aluminumTypes = [];
@@ -51,9 +42,11 @@ const AluminumService = (() => {
         };
         try {
             aluminumTypes.push(newAluminum);
-            const response = await fetch(JSONBIN_URL, {
+            const response = await fetch(API_URL, {
                 method: 'PUT',
-                headers,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -78,9 +71,11 @@ const AluminumService = (() => {
         
         try {
             Object.assign(aluminum, updated);
-            const response = await fetch(JSONBIN_URL, {
+            const response = await fetch(API_URL, {
                 method: 'PUT',
-                headers,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -96,10 +91,12 @@ const AluminumService = (() => {
         if (index === -1) return false;
         
         try {
-            const deleted = aluminumTypes.splice(index, 1);
-            const response = await fetch(JSONBIN_URL, {
+            aluminumTypes.splice(index, 1);
+            const response = await fetch(API_URL, {
                 method: 'PUT',
-                headers,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

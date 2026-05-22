@@ -5,24 +5,35 @@
 ## Kiến trúc
 
 - **Frontend:** HTML/CSS/JavaScript (static files)
-- **Backend Storage:** JSONBin (cloud JSON storage)
-- **Deployment:** Vercel (hosting static files)
+- **Backend Proxy:** Vercel Serverless Functions (`/api/aluminumTypes`)
+- **Data Storage:** JSONBin (cloud JSON storage)
+- **Deployment:** Vercel
+
+## Tại sao cần serverless function?
+
+JSONBin bị **CORS block** khi gọi từ frontend trực tiếp trên production. Serverless function làm **proxy** để:
+- Gọi JSONBin từ phía server (backend) → không bị CORS
+- Frontend chỉ gọi API của chính mình (`/api/aluminumTypes`)
+- API key JSONBin được bảo vệ trên backend
 
 ## Deploy lên Vercel
 
 ### 1. Chuẩn bị
 - Tài khoản GitHub
 - Tài khoản Vercel (kết nối với GitHub)
-- Bin JSONBin (đã tạo sẵn)
 
 ### 2. Deploy
 
 **Cách 1: Import từ GitHub (Đơn giản nhất)**
 1. Push code lên GitHub repository
+   ```bash
+   git add .
+   git commit -m "Fix JSONBin proxy"
+   git push
+   ```
 2. Vào https://vercel.com/new
 3. Chọn repository của bạn
-4. Vercel sẽ tự động detect cấu hình
-5. Click "Deploy"
+4. Click "Deploy"
 
 **Cách 2: Dùng Vercel CLI**
 ```bash
@@ -30,65 +41,88 @@ npm install -g vercel
 vercel
 ```
 
-### 3. Cấu hình JSONBin
+### 3. Cách hoạt động
 
-Dữ liệu được lưu trên JSONBin:
-- **Bin ID:** `6a0fd8eaee5a733b12fd2029`
-- **Master Key:** Đã được set trong `js/services/aluminumService.js`
+**Flow:**
+```
+Browser (Frontend)
+    ↓
+/api/aluminumTypes (Vercel Serverless Function)
+    ↓
+JSONBin API (Backend)
+    ↓
+/api/aluminumTypes (trả về data)
+    ↓
+Browser (display)
+```
 
-⚠️ **Lưu ý bảo mật:** API key được embed trong code frontend (không tránh được với frontend apps). Để bảo mật, bạn có thể:
-1. Tạo Bin riêng cho production
-2. Sử dụng backend proxy server
-3. Sử dụng database thay thế (MongoDB, Supabase, Firebase)
-
-### 4. Cách hoạt động
-
-**Local (development):**
+**Local Development:**
 ```bash
-# Mở index.html trong browser (hoặc dùng Live Server)
-# App sẽ fetch/update dữ liệu từ JSONBin trực tiếp
+# Mở index.html trong browser
+# App gọi /api/aluminumTypes
+# API function gọi JSONBin
+# CORS không bị chặn vì request từ backend
 ```
 
 **Production (Vercel):**
 - Static files được serve từ Vercel CDN
-- Tất cả API requests đi trực tiếp đến JSONBin từ browser
-- Dữ liệu được lưu vĩnh viễn trên JSONBin
+- Serverless functions xử lý requests
+- JSONBin backend lưu trữ dữ liệu
 
-### 5. API Endpoints (JSONBin)
+### 4. API Endpoints
 
-```
-GET https://api.jsonbin.io/v3/b/6a0fd8eaee5a733b12fd2029
-Header: X-Master-Key: {KEY}
-Response: { record: { aluminumTypes: [...] }, metadata: {...} }
-
-PUT https://api.jsonbin.io/v3/b/6a0fd8eaee5a733b12fd2029
-Header: X-Master-Key: {KEY}
-Body: { aluminumTypes: [...] }
+**GET** `/api/aluminumTypes`
+```bash
+curl https://your-project.vercel.app/api/aluminumTypes
+Response: [{ id: "alum_1", name: "...", code: "C3209", ... }]
 ```
 
-### 6. Cấu trúc dữ liệu
-
-```json
-{
-  "aluminumTypes": [
-    {
-      "id": "alum_1",
-      "name": "vách C3209",
-      "code": "C3209",
-      "weightPerMeter": 802,
-      "profileCount": 1
-    }
-  ]
-}
+**PUT** `/api/aluminumTypes` (Update toàn bộ)
+```bash
+curl -X PUT https://your-project.vercel.app/api/aluminumTypes \
+  -H "Content-Type: application/json" \
+  -d '{ "aluminumTypes": [...] }'
 ```
 
-### 7. Backup & Restore
+### 5. Cấu trúc project
 
-- **Backup:** Tải file từ JSONBin dashboard
-- **Restore:** Upload file JSON vào JSONBin
+```
+/
+├── index.html          # Frontend chính
+├── aluminum.html       # Quản lý nhôm
+├── js/
+│   ├── services/
+│   │   ├── aluminumService.js   # Gọi /api/aluminumTypes
+│   │   └── optimizationService.js
+│   └── ui/
+│       └── render.js
+├── api/
+│   └── aluminumTypes.js         # Serverless proxy function
+├── vercel.json         # Config functions
+└── package.json
+```
+
+### 6. JSONBin Configuration
+
+- **Bin ID:** `6a0fd8eaee5a733b12fd2029`
+- **Master Key:** Lưu trữ an toàn trong serverless function
+
+⚠️ **API key không expose** vì được sử dụng từ backend, không frontend
+
+### 7. Troubleshooting
+
+**Issue: "Cannot POST /api/aluminumTypes"**
+- Kiểm tra `vercel.json` có `functions` config
+- Đảm bảo `api/aluminumTypes.js` tồn tại
+
+**Issue: JSONBin 401 Unauthorized**
+- Kiểm tra API key trong `api/aluminumTypes.js`
+- Kiểm tra Bin ID đúng
+
+**Issue: "Bin not found"**
+- Vercel function chạy OK nhưng JSONBin trả lỗi
+- Kiểm tra https://jsonbin.io dashboard
 
 ---
 
-**Demo URL:** `your-project.vercel.app`
-
-**JSONBin Dashboard:** https://jsonbin.io/
+**Demo:** https://your-project.vercel.app
