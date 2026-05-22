@@ -1,8 +1,9 @@
 const AluminumService = (() => {
     let aluminumTypes = [];
     
-    // API endpoint (dùng serverless function làm proxy)
-    const API_URL = '/api/aluminumTypes';
+    // Detect environment
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocalhost ? '/db.json' : '/api/aluminumTypes';
 
     async function loadAluminumTypes() {
         try {
@@ -13,7 +14,16 @@ const AluminumService = (() => {
                 }
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            aluminumTypes = await response.json();
+            let data = await response.json();
+            
+            // Handle both /api format (array) and /db.json format (object)
+            if (data.aluminumTypes) {
+                aluminumTypes = data.aluminumTypes;
+            } else if (Array.isArray(data)) {
+                aluminumTypes = data;
+            } else {
+                aluminumTypes = [];
+            }
         } catch (error) {
             console.error('Lỗi khi tải dữ liệu nhôm:', error);
             aluminumTypes = [];
@@ -42,12 +52,18 @@ const AluminumService = (() => {
         };
         try {
             aluminumTypes.push(newAluminum);
+            
+            // Determine what to send based on endpoint
+            const payload = isLocalhost 
+                ? { aluminumTypes }
+                : { aluminumTypes };
+            
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ aluminumTypes })
+                body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return newAluminum;
@@ -71,12 +87,16 @@ const AluminumService = (() => {
         
         try {
             Object.assign(aluminum, updated);
+            const payload = isLocalhost 
+                ? { aluminumTypes }
+                : { aluminumTypes };
+            
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ aluminumTypes })
+                body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return updated;
@@ -92,12 +112,16 @@ const AluminumService = (() => {
         
         try {
             aluminumTypes.splice(index, 1);
+            const payload = isLocalhost 
+                ? { aluminumTypes }
+                : { aluminumTypes };
+            
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ aluminumTypes })
+                body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return true;
