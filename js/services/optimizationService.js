@@ -135,7 +135,7 @@ const OptimizationService = (() => {
 
         let beadResult = null;
         if (allBeadPieces.length > 0) {
-            beadResult = optimizePieceList(allBeadPieces, "Nẹp");
+            beadResult = optimizePieceList(allBeadPieces, "nẹp kính 3295");
             if (beadResult.error) {
                 throw new Error(`${beadResult.label}: ${beadResult.error}`);
             }
