@@ -18,7 +18,7 @@ const AluminumUI = (() => {
                     <p class="font-semibold text-slate-800">${esc(aluminum.name)}</p>
                     <div class="flex gap-6 text-sm text-slate-600 mt-1">
                         <span>Mã: <strong>${esc(aluminum.code)}</strong></span>
-                        <span>Cân nặng: <strong>${aluminum.weightPerMeter} kg/m</strong></span>
+                        <span>Cân nặng: <strong>${aluminum.weightPerMeter} g/m</strong></span>
                         <span>Số lượng nẹp: <strong>${aluminum.profileCount || 1}</strong></span>
                     </div>
                 </div>

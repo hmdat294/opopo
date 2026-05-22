@@ -4,7 +4,7 @@ const AluminumService = (() => {
     // JSONBin configuration
     const JSONBIN_BIN_ID = '6a0fd8eaee5a733b12fd2029';
     const JSONBIN_KEY = '$2a$10$UYIF4qD14K7VjKd.t7YRduvRNGS2JVp4OHtjxfTJi8Un9/o3cn7wO';
-    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+    const JSONBIN_URL = `http://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
     const headers = {
         'Content-Type': 'application/json',

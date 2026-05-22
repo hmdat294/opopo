@@ -21,8 +21,8 @@ const AluminumManager = (() => {
         }
 
         const profileCountNum = Number(profileCount);
-        if (profileCountNum < 1) {
-            alert("Số lượng nẹp phải lớn hơn 0.");
+        if (profileCountNum < 0) {
+            alert("Số lượng nẹp phải là số không âm.");
             return;
         }
 
@@ -32,7 +32,7 @@ const AluminumManager = (() => {
                 document.getElementById("aluminumName").value = "";
                 document.getElementById("aluminumCode").value = "";
                 document.getElementById("aluminumWeight").value = "";
-                document.getElementById("aluminumProfileCount").value = "1";
+                document.getElementById("aluminumProfileCount").value = "0";
                 
                 window.AluminumUI.renderAluminumList();
             })
