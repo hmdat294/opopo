@@ -48,7 +48,7 @@ const AluminumService = (() => {
             name: name.trim(),
             code: code.trim(),
             weightPerMeter: Number(weightPerMeter) || 0,
-            profileCount: Number(profileCount) || 1
+            profileCount: Number(profileCount) || 0
         };
         try {
             aluminumTypes.push(newAluminum);
@@ -82,7 +82,7 @@ const AluminumService = (() => {
             name: name.trim(),
             code: code.trim(),
             weightPerMeter: Number(weightPerMeter) || 0,
-            profileCount: Number(profileCount) || 1
+            profileCount: Number(profileCount) || 0
         };
         
         try {
