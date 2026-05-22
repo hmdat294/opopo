@@ -58,7 +58,13 @@ const AluminumUI = (() => {
             newCode,
             Number(newWeight),
             Number(newProfileCount)
-        ).then(() => renderAluminumList());
+        ).then(() => {
+            renderAluminumList();
+            // Refresh tab khách hàng
+            if (window.AluminumManager && window.AluminumManager.refreshMainUI) {
+                window.AluminumManager.refreshMainUI();
+            }
+        });
     }
 
     return {

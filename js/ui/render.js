@@ -160,30 +160,16 @@ var AppUI = (() => {
         <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
-        ${[
-          { key: 'aluminumVach', name: 'Vách' },
-          { key: 'aluminumDo', name: 'Đỡ' },
-          { key: 'aluminumKhungCD', name: 'Khung cửa đi' },
-          { key: 'aluminumCanhCD', name: 'Cánh cửa đi' },
-          { key: 'aluminumKhungCS', name: 'Khung cửa sổ' },
-          { key: 'aluminumCanhCS', name: 'Cánh cửa sổ' },
-          { key: 'beads', name: 'Nẹp' }
-        ]
-          .map(({ key, name }) => {
-            const item = r[key];
+        ${Object.entries(r)
+          .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
+          .map(([key, item]) => {
             if (!item || !item.bars || item.totalBars === 0) return '';
             
-            const sourceType = key === 'beads' ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
-            const baseCode = key === 'beads' ? 'beads' : getBaseCode(sourceType);
-            const alum = key === 'beads' ? null : aluminumTypes.find(a => a.code === baseCode);
+            const isBeads = key === 'beads';
+            const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+            const color = isBeads ? 'bg-yellow-500' : getColorForCode(sourceType);
             
-            let displayName = name;
-            if (key !== 'beads') {
-              displayName = alum?.name || name;
-            }
-            
-            const color = key === 'beads' ? 'bg-yellow-500' : getColorForCode(sourceType);
-            return mk(displayName, sourceType, item, color);
+            return mk(item.label, sourceType, item, color);
           })
           .join("")}
       </div>`;
@@ -248,7 +234,7 @@ var AppUI = (() => {
               <div class="flex gap-2">
                 <input id="segLength_${s.id}" type="number" min="1" max="${BAR_LENGTH_MM}" placeholder="Chiều dài (mm)" class="rounded border px-2 py-1 w-full">
                 <input id="segQty_${s.id}" type="number" min="1" value="1" class="rounded border px-2 py-1 w-1/6">
-                <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/4">
+                <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/2">
                   ${getAluminumSelectOptions()}
                 </select>
                 <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">

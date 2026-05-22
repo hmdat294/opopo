@@ -50,25 +50,10 @@ const OptimizationService = (() => {
     }
 
     function buildMaterialPieces(customer) {
-        const aluminumVachPieces = [];
-        const aluminumDoPieces = [];
-        const aluminumKhungCDPieces = [];
-        const aluminumCanhCDPieces = [];
-        const aluminumKhungCSPieces = [];
-        const aluminumCanhCSPieces = [];
-        const beadPieces = {};
+        // Tự động group segments theo code thay vì hardcoded
+        const materialPiecesMap = {}; // { "C3209": [...], "C3203": [...], ... }
+        const beadPieces = {}; // { "C3209_bead_1": [...], ... }
 
-        // Mapping từ code sang pieces array
-        const codeToArrayMap = {
-            "C3209": aluminumVachPieces,
-            "C3203": aluminumDoPieces,
-            "C3328": aluminumKhungCDPieces,
-            "C3303": aluminumCanhCDPieces,
-            "C3318": aluminumKhungCSPieces,
-            "C8092": aluminumCanhCSPieces
-        };
-
-        // Lấy AluminumService để tìm profileCount
         const aluminumService = window.AluminumService;
 
         customer.sets.forEach((set) => {
@@ -78,13 +63,14 @@ const OptimizationService = (() => {
                 const aluminumCode = segment.segmentType;
                 if (lengthMm <= 0 || quantity <= 0) return;
 
-                // Lấy array tương ứng với code nhôm
-                const targetAluminum = codeToArrayMap[aluminumCode];
-                if (!targetAluminum) return;
+                // Initialize array nếu chưa tồn tại
+                if (!materialPiecesMap[aluminumCode]) {
+                    materialPiecesMap[aluminumCode] = [];
+                }
 
-                // Thêm pieces vào array tương ứng
+                // Thêm pieces cho nhôm chính
                 for (let i = 0; i < quantity; i += 1) {
-                    targetAluminum.push({
+                    materialPiecesMap[aluminumCode].push({
                         setName: set.name,
                         sourceType: aluminumCode,
                         lengthMm,
@@ -117,36 +103,31 @@ const OptimizationService = (() => {
         });
 
         return {
-            aluminumVachPieces,
-            aluminumDoPieces,
-            aluminumKhungCDPieces,
-            aluminumCanhCDPieces,
-            aluminumKhungCSPieces,
-            aluminumCanhCSPieces,
+            materialPiecesMap,
             beadPieces
         };
     }
 
     function optimizeBars(customer) {
-
         const {
-            aluminumVachPieces,
-            aluminumDoPieces,
-            aluminumKhungCDPieces,
-            aluminumCanhCDPieces,
-            aluminumKhungCSPieces,
-            aluminumCanhCSPieces,
+            materialPiecesMap,
             beadPieces
         } = buildMaterialPieces(customer);
 
-        const aluminumVach = optimizePieceList(aluminumVachPieces, "Vach");
-        const aluminumDo = optimizePieceList(aluminumDoPieces, "Do");
-        const aluminumKhungCD = optimizePieceList(aluminumKhungCDPieces, "Khung cua di");
-        const aluminumCanhCD = optimizePieceList(aluminumCanhCDPieces, "Canh cua di");
-        const aluminumKhungCS = optimizePieceList(aluminumKhungCSPieces, "Khung cua so");
-        const aluminumCanhCS = optimizePieceList(aluminumCanhCSPieces, "Canh cua so");
+        // Tối ưu hóa từng nhôm chính
+        const materialResults = {};
+        Object.entries(materialPiecesMap).forEach(([aluminumCode, pieces]) => {
+            const aluminum = window.AluminumService.getAluminumByCode(aluminumCode);
+            const name = aluminum?.name || aluminumCode;
+            materialResults[aluminumCode] = optimizePieceList(pieces, name);
+        });
 
-        // Gộp tất cả bead pieces lại thành một mảng duy nhất
+        // Check errors từ các nhôm chính
+        const mainResults = Object.values(materialResults);
+        const hasError = mainResults.find((item) => item.error);
+        if (hasError) return { error: `${hasError.label}: ${hasError.error}` };
+
+        // Gộp tất cả bead pieces lại
         const allBeadPieces = [];
         Object.entries(beadPieces).forEach(([beadCode, beadArray]) => {
             allBeadPieces.push(...beadArray);
@@ -160,49 +141,26 @@ const OptimizationService = (() => {
             }
         }
 
-        const mainResults = [
-            aluminumVach,
-            aluminumDo,
-            aluminumKhungCD,
-            aluminumCanhCD,
-            aluminumKhungCS,
-            aluminumCanhCS
-        ];
+        // Tính tổng
+        let totalBars = 0;
+        let totalPieces = 0;
+        
+        Object.values(materialResults).forEach(result => {
+            totalBars += result.totalBars;
+            totalPieces += result.totalPieces;
+        });
 
-        const hasError = mainResults.find((item) => item.error);
-        if (hasError) return { error: `${hasError.label}: ${hasError.error}` };
+        if (beadResult) {
+            totalBars += beadResult.totalBars;
+            totalPieces += beadResult.totalPieces;
+        }
 
-        const totalBeadBars = beadResult ? beadResult.totalBars : 0;
-        const totalBeadPieces = beadResult ? beadResult.totalPieces : 0;
-
-        const totalBars =
-            aluminumVach.totalBars +
-            aluminumDo.totalBars +
-            aluminumKhungCD.totalBars +
-            aluminumCanhCD.totalBars +
-            aluminumKhungCS.totalBars +
-            aluminumCanhCS.totalBars +
-            totalBeadBars;
-
-        const totalPieces =
-            aluminumVach.totalPieces +
-            aluminumDo.totalPieces +
-            aluminumKhungCD.totalPieces +
-            aluminumCanhCD.totalPieces +
-            aluminumKhungCS.totalPieces +
-            aluminumCanhCS.totalPieces +
-            totalBeadPieces;
-
+        // Build result object
         const result = {
             kerfUsedMm: EFFECTIVE_KERF_MM,
             totalBars,
             totalPieces,
-            aluminumVach,
-            aluminumDo,
-            aluminumKhungCD,
-            aluminumCanhCD,
-            aluminumKhungCS,
-            aluminumCanhCS
+            ...materialResults
         };
 
         if (beadResult) {

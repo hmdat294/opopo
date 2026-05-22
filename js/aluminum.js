@@ -5,6 +5,13 @@ const AluminumManager = (() => {
         window.AluminumUI.renderAluminumList();
     }
 
+    // Hàm refresh main UI (tab khách hàng) khi dữ liệu nhôm thay đổi
+    async function refreshMainUI() {
+        if (window.AppUI && window.AppUI.render) {
+            window.AppUI.render();
+        }
+    }
+
     function bindEvents() {
         document.getElementById("addAluminumBtn").addEventListener("click", handleAddAluminum);
     }
@@ -35,6 +42,7 @@ const AluminumManager = (() => {
                 document.getElementById("aluminumProfileCount").value = "0";
                 
                 window.AluminumUI.renderAluminumList();
+                refreshMainUI(); // Refresh tab khách hàng
             })
             .catch(error => {
                 console.error('Lỗi:', error);
@@ -42,7 +50,7 @@ const AluminumManager = (() => {
             });
     }
 
-    return { init };
+    return { init, refreshMainUI };
 })();
 
 // Global functions for onclick handlers
@@ -51,12 +59,21 @@ window.deleteAluminum = (aluminumId) => {
         window.AluminumService.deleteAluminum(aluminumId)
             .then(() => {
                 window.AluminumUI.renderAluminumList();
+                window.AluminumManager.refreshMainUI(); // Refresh tab khách hàng
             })
             .catch(error => {
                 console.error('Lỗi:', error);
                 alert('Lỗi khi xóa nhôm');
             });
     }
+};
+
+window.editAluminumModal = (aluminumId) => {
+    window.AluminumUI.showEditModal(aluminumId);
+    // Delay để đảm bảo edit xong rồi mới refresh
+    setTimeout(() => {
+        window.AluminumManager.refreshMainUI();
+    }, 100);
 };
 
 window.editAluminumModal = (aluminumId) => {
