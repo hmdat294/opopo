@@ -1,6 +1,18 @@
 const AluminumService = (() => {
     let aluminumTypes = [];
-    const API_URL = 'http://localhost:3000/aluminumTypes';
+    
+    // Detect environment và set API URL
+    const getApiUrl = () => {
+        if (typeof window !== 'undefined') {
+            // Client-side
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:3000/aluminumTypes';
+            }
+        }
+        return '/api/aluminumTypes';
+    };
+    
+    const API_URL = getApiUrl();
 
     async function loadAluminumTypes() {
         try {
@@ -63,7 +75,7 @@ const AluminumService = (() => {
         };
         
         try {
-            const response = await fetch(`${API_URL}/${id}`, {
+            const response = await fetch(`${API_URL}?id=${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updated)
@@ -84,7 +96,7 @@ const AluminumService = (() => {
         if (index === -1) return false;
         
         try {
-            const response = await fetch(`${API_URL}/${id}`, {
+            const response = await fetch(`${API_URL}?id=${id}`, {
                 method: 'DELETE'
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

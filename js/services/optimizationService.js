@@ -107,6 +107,7 @@ const OptimizationService = (() => {
                         beadPieces[beadCode].push({
                             setName: set.name,
                             sourceType: beadCode,
+                            originalAluminumCode: aluminumCode,
                             lengthMm,
                             usedMm: lengthMm + EFFECTIVE_KERF_MM
                         });
