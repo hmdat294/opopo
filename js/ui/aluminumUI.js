@@ -19,7 +19,7 @@ const AluminumUI = (() => {
                     <div class="flex gap-6 text-sm text-slate-600 mt-1">
                         <span>Mã: <strong>${esc(aluminum.code)}</strong></span>
                         <span>Cân nặng: <strong>${aluminum.weightPerMeter} g/m</strong></span>
-                        <span>Số lượng nẹp: <strong>${aluminum.profileCount || 1}</strong></span>
+                        <span>Số lượng nẹp: <strong>${aluminum.profileCount || 0}</strong></span>
                     </div>
                 </div>
                 <div class="flex gap-2 ml-4">
@@ -49,7 +49,7 @@ const AluminumUI = (() => {
         const newWeight = prompt("Cân nặng (kg/m):", aluminum.weightPerMeter);
         if (newWeight === null) return;
 
-        const newProfileCount = prompt("Số lượng nẹp:", aluminum.profileCount || 1);
+        const newProfileCount = prompt("Số lượng nẹp:", aluminum.profileCount || 0);
         if (newProfileCount === null) return;
 
         window.AluminumService.updateAluminum(
