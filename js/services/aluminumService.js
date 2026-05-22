@@ -31,7 +31,7 @@ const AluminumService = (() => {
     }
 
     function getAluminumTypes() {
-        return [...aluminumTypes];
+        return [...aluminumTypes.reverse()]; // Trả về bản sao đảo ngược để mới nhất lên đầu
     }
 
     function getAluminumById(id) {
