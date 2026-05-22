@@ -88,49 +88,47 @@ var AppUI = (() => {
 
     const mk = (name, code, m, c) => {
       const baseCode = getBaseCode(code);
-      const { totalLength, totalKerf } = m.bars.reduce(
-        (acc, b) => {
-          const pieces = b.pieces || [];
+      const weight_per_meter = weight[baseCode] || 0;
+      
+      // Tính tổng length cho mỗi bar riêng biệt
+      const barsInfo = m.bars.map((b) => {
+        const pieces = b.pieces || [];
+        const barLength = pieces.reduce(
+          (sum, p) => sum + Number(p.lengthMm || 0),
+          0
+        );
+        const barKerf = Math.max(0, pieces.length - 1) * 10;
+        const usedMm = barLength + barKerf;
+        const waste = BAR - usedMm;
+        return { usedMm, barLength, barKerf, waste, pieces };
+      });
 
-          const barLength = pieces.reduce(
-            (sum, p) => sum + Number(p.lengthMm || 0),
-            0
-          );
-
-          const barKerf = Math.max(0, pieces.length - 1) * 10;
-
-          acc.totalLength += barLength;
-          acc.totalKerf += barKerf;
-
-          return acc;
-        },
-        { totalLength: 0, totalKerf: 0 }
-      );
-
-      const totalWithKerf = totalLength + totalKerf;
-      const barsNeeded = Math.ceil(totalWithKerf / BAR);
-      const totalCapacity = barsNeeded * BAR;
-      const waste = totalCapacity - totalWithKerf;
+      const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
+      const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
+      const totalWeight = (weight_per_meter * BAR_LENGTH_MM * m.totalBars / 1000000).toFixed(3);
 
       return m.totalBars == 0 ? `` : `
         <div class="rounded border p-2">
           <div class="flex justify-between">
             <p class="font-normal">
-              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${(weight[baseCode] * BAR_LENGTH_MM * m.totalBars / 1000000).toFixed(3)}kg
-            </p>
-            <p class="font-normal">
-             Còn lại ${waste}mm
+              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${totalWeight}kg
             </p>
           </div>
-          ${m.bars.map((b) => `
+          ${barsInfo.map((info, idx) => `
             <div class="mt-2">
               <div class="flex h-8 overflow-hidden rounded border">
-                ${b.pieces.map((p) => `
+                ${info.pieces.map((p) => `
                   <div class="${c} flex items-center justify-center border-r px-1 text-md text-white text-center text-xs"
-                       style="width:${(p.usedMm / BAR_LENGTH_MM) * 100}%">
+                       style="width:${(p.usedMm / BAR) * 100}%">
                     ${esc(p.setName)} - ${p.lengthMm}mm
                   </div>
                 `).join("")}
+                ${info.waste > 0 ? `
+                  <div class="flex items-center justify-center border-r px-1 text-xs bg-gray-300 text-gray-700"
+                       style="width:${(info.waste / BAR) * 100}%">
+                    Thừa ${info.waste}mm
+                  </div>
+                ` : ""}
               </div>
             </div>
           `).join("")}
@@ -143,25 +141,32 @@ var AppUI = (() => {
         <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
-        ${Object.values(r)
-          .filter(item => item && item.bars && Array.isArray(item.bars) && item.totalBars > 0)
-          .map(item => {
-            const firstPiece = item.bars[0]?.pieces?.[0];
-            const sourceType = firstPiece?.sourceType;
-            const baseCode = getBaseCode(sourceType);
-            const alum = aluminumTypes.find(a => a.code === baseCode);
+        ${[
+          { key: 'aluminumVach', name: 'Vách' },
+          { key: 'aluminumDo', name: 'Đỡ' },
+          { key: 'aluminumKhungCD', name: 'Khung cửa đi' },
+          { key: 'aluminumCanhCD', name: 'Cánh cửa đi' },
+          { key: 'aluminumKhungCS', name: 'Khung cửa sổ' },
+          { key: 'aluminumCanhCS', name: 'Cánh cửa sổ' },
+          { key: 'beads', name: 'Nẹp' }
+        ]
+          .map(({ key, name }) => {
+            const item = r[key];
+            if (!item || !item.bars || item.totalBars === 0) return '';
             
-            let name = "";
-            if (sourceType.includes("_bead_")) {
-              const beadIndex = sourceType.split("_bead_")[1];
-              name = `nẹp của ${alum?.name || baseCode} (${beadIndex})`;
-            } else {
-              name = alum?.name || sourceType || "Không xác định";
+            const sourceType = key === 'beads' ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+            const baseCode = key === 'beads' ? 'beads' : getBaseCode(sourceType);
+            const alum = key === 'beads' ? null : aluminumTypes.find(a => a.code === baseCode);
+            
+            let displayName = name;
+            if (key !== 'beads') {
+              displayName = alum?.name || name;
             }
             
-            const color = getColorForCode(sourceType);
-            return mk(name, sourceType, item, color);
-          }).join("")}
+            const color = key === 'beads' ? 'bg-yellow-500' : getColorForCode(sourceType);
+            return mk(displayName, sourceType, item, color);
+          })
+          .join("")}
       </div>`;
   }
 

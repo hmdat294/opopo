@@ -145,19 +145,19 @@ const OptimizationService = (() => {
         const aluminumKhungCS = optimizePieceList(aluminumKhungCSPieces, "Khung cua so");
         const aluminumCanhCS = optimizePieceList(aluminumCanhCSPieces, "Canh cua so");
 
-        // Xử lý bead pieces
-        const beadResults = {};
-        let totalBeadBars = 0;
-        let totalBeadPieces = 0;
+        // Gộp tất cả bead pieces lại thành một mảng duy nhất
+        const allBeadPieces = [];
         Object.entries(beadPieces).forEach(([beadCode, beadArray]) => {
-            const beadResult = optimizePieceList(beadArray, beadCode);
+            allBeadPieces.push(...beadArray);
+        });
+
+        let beadResult = null;
+        if (allBeadPieces.length > 0) {
+            beadResult = optimizePieceList(allBeadPieces, "Nẹp");
             if (beadResult.error) {
                 throw new Error(`${beadResult.label}: ${beadResult.error}`);
             }
-            beadResults[beadCode] = beadResult;
-            totalBeadBars += beadResult.totalBars;
-            totalBeadPieces += beadResult.totalPieces;
-        });
+        }
 
         const mainResults = [
             aluminumVach,
@@ -170,6 +170,9 @@ const OptimizationService = (() => {
 
         const hasError = mainResults.find((item) => item.error);
         if (hasError) return { error: `${hasError.label}: ${hasError.error}` };
+
+        const totalBeadBars = beadResult ? beadResult.totalBars : 0;
+        const totalBeadPieces = beadResult ? beadResult.totalPieces : 0;
 
         const totalBars =
             aluminumVach.totalBars +
@@ -198,9 +201,12 @@ const OptimizationService = (() => {
             aluminumKhungCD,
             aluminumCanhCD,
             aluminumKhungCS,
-            aluminumCanhCS,
-            ...beadResults
+            aluminumCanhCS
         };
+
+        if (beadResult) {
+            result.beads = beadResult;
+        }
 
         return result;
     }
