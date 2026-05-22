@@ -49,15 +49,21 @@ const AluminumUI = (() => {
         const newWeight = prompt("Cân nặng (kg/m):", aluminum.weightPerMeter);
         if (newWeight === null) return;
 
-        const newProfileCount = prompt("Số lượng nẹp:", aluminum.profileCount || 0);
+        const newProfileCount = prompt("Số lượng nẹp (tối thiểu 0):", aluminum.profileCount || 0);
         if (newProfileCount === null) return;
+
+        const profileCountNum = Number(newProfileCount);
+        if (profileCountNum < 0) {
+            alert("Số lượng nẹp phải là số không âm (tối thiểu 0).");
+            return;
+        }
 
         window.AluminumService.updateAluminum(
             aluminumId,
             newName,
             newCode,
             Number(newWeight),
-            Number(newProfileCount)
+            profileCountNum
         ).then(() => {
             renderAluminumList();
             // Refresh tab khách hàng

@@ -29,7 +29,7 @@ const AluminumManager = (() => {
 
         const profileCountNum = Number(profileCount);
         if (profileCountNum < 0) {
-            alert("Số lượng nẹp phải là số không âm.");
+            alert("Số lượng nẹp phải là số không âm (tối thiểu 0).");
             return;
         }
 
