@@ -1,24 +1,28 @@
 const AluminumService = (() => {
     let aluminumTypes = [];
     
-    // Detect environment và set API URL
-    const getApiUrl = () => {
-        if (typeof window !== 'undefined') {
-            // Client-side
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                return 'http://localhost:3000/aluminumTypes';
-            }
-        }
-        return '/api/aluminumTypes';
+    // JSONBin configuration
+    const JSONBIN_BIN_ID = '6a0fd8eaee5a733b12fd2029';
+    const JSONBIN_KEY = '$2a$10$UYIF4qD14K7VjKd.t7YRduvRNGS2JVp4OHtjxfTJi8Un9/o3cn7wO';
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY
     };
-    
-    const API_URL = getApiUrl();
 
     async function loadAluminumTypes() {
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(JSONBIN_URL, {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': JSONBIN_KEY
+                }
+            });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            aluminumTypes = await response.json();
+            const data = await response.json();
+            // JSONBin returns { record: {...}, metadata: {...} }
+            aluminumTypes = data.record?.aluminumTypes || [];
         } catch (error) {
             console.error('Lỗi khi tải dữ liệu nhôm:', error);
             aluminumTypes = [];
@@ -46,18 +50,16 @@ const AluminumService = (() => {
             profileCount: Number(profileCount) || 1
         };
         try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAluminum)
+            aluminumTypes.push(newAluminum);
+            const response = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const result = await response.json();
-            aluminumTypes.push(result);
-            return result;
+            return newAluminum;
         } catch (error) {
             console.error('Lỗi khi thêm nhôm:', error);
-            aluminumTypes.push(newAluminum);
             return newAluminum;
         }
     }
@@ -75,19 +77,17 @@ const AluminumService = (() => {
         };
         
         try {
-            const response = await fetch(`${API_URL}?id=${id}`, {
+            Object.assign(aluminum, updated);
+            const response = await fetch(JSONBIN_URL, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updated)
+                headers,
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const result = await response.json();
-            Object.assign(aluminum, result);
-            return result;
+            return updated;
         } catch (error) {
             console.error('Lỗi khi cập nhật nhôm:', error);
-            Object.assign(aluminum, updated);
-            return aluminum;
+            return updated;
         }
     }
 
@@ -96,11 +96,13 @@ const AluminumService = (() => {
         if (index === -1) return false;
         
         try {
-            const response = await fetch(`${API_URL}?id=${id}`, {
-                method: 'DELETE'
+            const deleted = aluminumTypes.splice(index, 1);
+            const response = await fetch(JSONBIN_URL, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            aluminumTypes.splice(index, 1);
             return true;
         } catch (error) {
             console.error('Lỗi khi xóa nhôm:', error);

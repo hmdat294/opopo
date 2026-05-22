@@ -2,11 +2,18 @@
 
 Ứng dụng quản lý và tối ưu hóa tiêu thụ nhôm.
 
+## Kiến trúc
+
+- **Frontend:** HTML/CSS/JavaScript (static files)
+- **Backend Storage:** JSONBin (cloud JSON storage)
+- **Deployment:** Vercel (hosting static files)
+
 ## Deploy lên Vercel
 
 ### 1. Chuẩn bị
 - Tài khoản GitHub
 - Tài khoản Vercel (kết nối với GitHub)
+- Bin JSONBin (đã tạo sẵn)
 
 ### 2. Deploy
 
@@ -23,44 +30,65 @@ npm install -g vercel
 vercel
 ```
 
-### 3. Cấu hình
+### 3. Cấu hình JSONBin
 
-Project này đã có sẵn:
-- ✅ `package.json` - Dependencies
-- ✅ `vercel.json` - Vercel config
-- ✅ `api/aluminumTypes.js` - Serverless function
-- ✅ Static files (.html, .css, .js)
+Dữ liệu được lưu trên JSONBin:
+- **Bin ID:** `6a0fd8eaee5a733b12fd2029`
+- **Master Key:** Đã được set trong `js/services/aluminumService.js`
+
+⚠️ **Lưu ý bảo mật:** API key được embed trong code frontend (không tránh được với frontend apps). Để bảo mật, bạn có thể:
+1. Tạo Bin riêng cho production
+2. Sử dụng backend proxy server
+3. Sử dụng database thay thế (MongoDB, Supabase, Firebase)
 
 ### 4. Cách hoạt động
 
 **Local (development):**
 ```bash
-npm install
-npm run dev  # Khởi động json-server trên port 3000
+# Mở index.html trong browser (hoặc dùng Live Server)
+# App sẽ fetch/update dữ liệu từ JSONBin trực tiếp
 ```
-Mở http://localhost:5500 (dùng Live Server extension)
 
 **Production (Vercel):**
 - Static files được serve từ Vercel CDN
-- API requests được xử lý bởi serverless function `/api/aluminumTypes`
-- Dữ liệu lưu trong `db.json`
+- Tất cả API requests đi trực tiếp đến JSONBin từ browser
+- Dữ liệu được lưu vĩnh viễn trên JSONBin
 
-### 5. Ghi chú quan trọng
+### 5. API Endpoints (JSONBin)
 
-⚠️ **Vercel có giới hạn về file system:**
-- Serverless functions không thể ghi file vào disk
-- Dữ liệu sẽ được lưu nhưng sẽ reset khi deploy lại
-- Để lưu dữ liệu vĩnh viễn, cần dùng database (MongoDB, PostgreSQL, etc.)
+```
+GET https://api.jsonbin.io/v3/b/6a0fd8eaee5a733b12fd2029
+Header: X-Master-Key: {KEY}
+Response: { record: { aluminumTypes: [...] }, metadata: {...} }
 
-### 6. Upgrade sang database (Optional)
+PUT https://api.jsonbin.io/v3/b/6a0fd8eaee5a733b12fd2029
+Header: X-Master-Key: {KEY}
+Body: { aluminumTypes: [...] }
+```
 
-Để lưu dữ liệu vĩnh viễn trên production:
-1. Dùng MongoDB Atlas (free tier có sẵn)
-2. Hoặc Supabase, Firebase
-3. Cập nhật `api/aluminumTypes.js` để query database thay vì file
+### 6. Cấu trúc dữ liệu
+
+```json
+{
+  "aluminumTypes": [
+    {
+      "id": "alum_1",
+      "name": "vách C3209",
+      "code": "C3209",
+      "weightPerMeter": 802,
+      "profileCount": 1
+    }
+  ]
+}
+```
+
+### 7. Backup & Restore
+
+- **Backup:** Tải file từ JSONBin dashboard
+- **Restore:** Upload file JSON vào JSONBin
 
 ---
 
-**Domains:**
-- Demo: `your-project.vercel.app`
-- Custom domain có thể được thêm trong Vercel Dashboard
+**Demo URL:** `your-project.vercel.app`
+
+**JSONBin Dashboard:** https://jsonbin.io/

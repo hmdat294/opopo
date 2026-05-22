@@ -3,16 +3,11 @@
   "version": "1.0.0",
   "description": "OPOPO - Aluminum optimization system",
   "main": "index.html",
-  "type": "module",
   "scripts": {
-    "dev": "json-server --watch db.json --port 3000",
     "build": "echo 'Static site ready'",
-    "start": "node api/server.js"
+    "dev": "echo 'Open index.html in browser'"
   },
   "keywords": ["aluminum", "optimization"],
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "json-server": "^0.17.4"
-  }
+  "license": "ISC"
 }
