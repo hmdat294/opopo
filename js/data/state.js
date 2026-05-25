@@ -1,8 +1,10 @@
 const AppData = (() => {
     const STORAGE_KEY = "aluminumEstimatorData";
+    const SETTINGS_KEY = "aluminumEstimatorSettings";
     const BAR_LENGTH_MM = 5800;
     const KERF_MM = 10;
     const appState = { customers: [] };
+    const settings = { unitPrice: 148000 };
 
     function uid(prefix) {
         return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
@@ -30,6 +32,23 @@ const AppData = (() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
     }
 
+    function saveSettings() {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return;
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed.unitPrice === 'number') {
+                settings.unitPrice = parsed.unitPrice;
+            }
+        } catch (error) {
+            console.error("Khong doc duoc settings:", error);
+        }
+    }
+
     function loadState() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
@@ -55,13 +74,17 @@ const AppData = (() => {
 
     return {
         STORAGE_KEY,
+        SETTINGS_KEY,
         BAR_LENGTH_MM,
         KERF_MM,
         appState,
+        settings,
         uid,
         normalizeCustomer,
         saveState,
         loadState,
+        saveSettings,
+        loadSettings,
         findCustomer,
         findSet
     };

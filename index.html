@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OPOPO</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 
@@ -17,9 +18,13 @@
             </div>
 
             <div class="flex gap-3 items-center">
-                <!-- <a href="./aluminum.html" class="rounded bg-indigo-500 px-3 py-1 text-sm font-medium text-white hover:bg-indigo-600">
-                    Quản lý nhôm
-                </a> -->
+                <!-- Settings Modal Button -->
+                <button id="settingsBtn" class="rounded bg-gray-500 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600" title="Cài đặt">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94m-.213 9.526c.027.20.055.406.084.592.176 1.307-.298 2.453-.952 3.285-.656.832-1.629 1.33-2.652 1.33-.344 0-.677-.074-.979-.214-.299.165-.631.25-.979.25-.35 0-.68-.085-.979-.25-.302.14-.635.214-.979.214-1.023 0-1.996-.498-2.652-1.33-.654-.832-1.128-1.978-.952-3.285.03-.186.057-.392.084-.592m0 0A5.64 5.64 0 0 1 9.432 3H9.456c.596 0 1.18.098 1.734.292m0 0A5.58 5.58 0 0 0 9.456 3h-.024c-.636 0-1.258.097-1.855.288m0 0a5.606 5.606 0 0 1 1.855-.288zm0 0A5.589 5.589 0 0 1 13.5 5.106a5.589 5.589 0 0 1 5.861 5.588M20.21 7.04c.307.465.405 1.02.285 1.55-.12.53-.456 1.025-.93 1.32m0 0a5.592 5.592 0 0 1-9.668 0m12.576-4.986a5.552 5.552 0 0 1-3.355 1.973m-.694-9.062a5.56 5.56 0 0 1 4.332 1.39c.821.9 1.444 2.025 1.684 3.22m0 0a5.592 5.592 0 0 1-7.201 8.264m0 0a5.555 5.555 0 0 1-1.579-3.718m0 0a5.59 5.59 0 0 1 5.201-5.805" />
+                    </svg>
+                </button>
                 <div class="rounded border border-slate-200 bg-white p-3 shadow-sm">
                     <div class="flex flex-wrap items-center gap-2">
                         <input id="customerNameInput" type="text" placeholder="Tên khách hàng"
@@ -38,6 +43,21 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full mx-4">
+                <h2 class="text-xl font-bold mb-4">Cài đặt</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Đơn giá mặc định (VND/kg)</label>
+                    <input id="unitPriceInput" type="number" min="0" class="w-full rounded border border-slate-300 px-3 py-2">
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button id="settingsCancelBtn" class="rounded bg-gray-300 px-4 py-2 text-sm font-medium">Hủy</button>
+                    <button id="settingsSaveBtn" class="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white">Lưu</button>
                 </div>
             </div>
         </div>

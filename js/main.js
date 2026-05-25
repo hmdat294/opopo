@@ -8,6 +8,42 @@ const MainApp = (() => {
         window.handleAddSet = window.AppUI.handleAddSet;
         window.handleAddSegment = window.AppUI.handleAddSegment;
         window.renderOptimization = window.AppUI.renderOptimization;
+        window.exportPDF = window.AppUI.exportPDF;
+    }
+
+    function bindSettingsModal() {
+        const modal = document.getElementById("settingsModal");
+        const settingsBtn = document.getElementById("settingsBtn");
+        const settingsCancelBtn = document.getElementById("settingsCancelBtn");
+        const settingsSaveBtn = document.getElementById("settingsSaveBtn");
+        const unitPriceInput = document.getElementById("unitPriceInput");
+
+        settingsBtn.addEventListener("click", () => {
+            unitPriceInput.value = window.AppData.settings.unitPrice;
+            modal.classList.remove("hidden");
+        });
+
+        settingsCancelBtn.addEventListener("click", () => {
+            modal.classList.add("hidden");
+        });
+
+        settingsSaveBtn.addEventListener("click", () => {
+            const price = Number(unitPriceInput.value);
+            if (price > 0) {
+                window.AppData.settings.unitPrice = price;
+                window.AppData.saveSettings();
+                window.AppUI.render();
+                modal.classList.add("hidden");
+            } else {
+                alert("Đơn giá phải lớn hơn 0");
+            }
+        });
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                modal.classList.add("hidden");
+            }
+        });
     }
 
     function bindTopButtons() {
@@ -31,9 +67,11 @@ const MainApp = (() => {
 
     async function start() {
         await window.AluminumService.loadAluminumTypes();
-        bindGlobalActions();
-        bindTopButtons();
+        window.AppData.loadSettings();
         window.AppData.loadState();
+        bindGlobalActions();
+        bindSettingsModal();
+        bindTopButtons();
         window.AppUI.render();
     }
 

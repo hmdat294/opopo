@@ -34,7 +34,7 @@ var AppUI = (() => {
     if (r.error) return void (holder.innerHTML = `<div class="mt-2 rounded border border-red-300 bg-red-50 p-2 text-sm text-red-500">${esc(r.error)}</div>`);
 
     const BAR = 5800;
-    const unit_price = 148000;
+    const unit_price = window.AppData.settings.unitPrice;
     const formatted = (money) => new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
@@ -157,7 +157,14 @@ var AppUI = (() => {
     holder.innerHTML =
       `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-md font-medium flex justify-between items-center">
         <p>Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg</p>
-        <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
+        <div class="flex gap-2">
+          <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
+          <button class="rounded bg-blue-500 px-2 py-1 text-xs text-white" onclick="exportPDF('${customerId}')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          </button>
+        </div>
       </div>  
       <div class="mt-2 space-y-2">
         ${Object.entries(r)
@@ -295,7 +302,164 @@ var AppUI = (() => {
     }).join("");
   }
 
-  return { render, renderOptimization, handleAddSet, handleAddSegment };
+  function exportPDF(customerId) {
+    const customer = findCustomer(customerId);
+    if (!customer) return alert("Không tìm thấy khách hàng");
+
+    const r = window.OptimizationService.optimizeBars(customer);
+    if (r.error) return alert("Lỗi: " + r.error);
+
+    const BAR = 5800;
+    const BAR_LENGTH_MM = 5800;
+    const unit_price = window.AppData.settings.unitPrice;
+    const formatted = (money) => new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(money);
+
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    const weight = {};
+    aluminumTypes.forEach(a => {
+      weight[a.code] = a.weightPerMeter;
+    });
+
+    function getBaseCode(sourceType) {
+      const parts = sourceType.split("_bead_");
+      return parts[0];
+    }
+
+    const calcWeight = (type, m) => {
+      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
+      if (baseCode === 'beads' && m.bars && m.bars[0]) {
+        const firstPiece = m.bars[0]?.pieces?.[0];
+        if (firstPiece?.originalAluminumCode) {
+          const origCode = firstPiece.originalAluminumCode;
+          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+        }
+      }
+      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+    };
+
+    const totalWeight = Object.values(r)
+      .filter(item => item && item.bars && Array.isArray(item.bars))
+      .reduce((sum, item) => {
+        const firstPiece = item.bars[0]?.pieces?.[0];
+        if (firstPiece) {
+          return sum + calcWeight(firstPiece.sourceType, item);
+        }
+        return sum;
+      }, 0);
+
+    const totalCost = (totalWeight.toFixed(3) * unit_price).toFixed(0);
+
+    let html = `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+            h1 { text-align: center; color: #2c3e50; }
+            .info { margin: 20px 0; border: 1px solid #ddd; padding: 10px; background: #f9f9f9; }
+            .summary { margin: 20px 0; font-size: 16px; font-weight: bold; border: 2px solid #27ae60; padding: 15px; background: #ecf0f1; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #bbb; padding: 10px; text-align: left; }
+            th { background: #34495e; color: white; }
+            tr:nth-child(even) { background: #f2f2f2; }
+            .bar-item { margin: 10px 0; padding: 10px; background: #ecf0f1; border-left: 5px solid #3498db; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; text-align: center; color: #7f8c8d; }
+          </style>
+        </head>
+        <body>
+          <h1>Báo giá nhôm OPOPO</h1>
+          <div class="info">
+            <p><strong>Khách hàng:</strong> ${esc(customer.name)}</p>
+            <p><strong>Ngày:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
+            <p><strong>Đơn giá:</strong> ${formatted(unit_price)}/kg</p>
+          </div>
+
+          <div class="summary">
+            <p>Tổng: ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg | ${formatted(totalCost)}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Loại nhôm</th>
+                <th>Số lượng thanh</th>
+                <th>Chiều dài (mm)</th>
+                <th>Chiều dài cắt (mm)</th>
+                <th>Khối lượng (kg)</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    Object.entries(r)
+      .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
+      .forEach(([key, item]) => {
+        if (!item || !item.bars || item.totalBars === 0) return;
+
+        const isBeads = key === 'beads';
+        const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+        
+        let weight_per_meter = 0;
+        if (isBeads && item.bars && item.bars[0]) {
+          const firstPiece = item.bars[0]?.pieces?.[0];
+          if (firstPiece?.originalAluminumCode) {
+            weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
+          }
+        } else {
+          const baseCode = getBaseCode(sourceType);
+          weight_per_meter = weight[baseCode] || 0;
+        }
+
+        const barsInfo = item.bars.map((b) => {
+          const pieces = b.pieces || [];
+          const barLength = pieces.reduce((sum, p) => sum + Number(p.lengthMm || 0), 0);
+          const barKerf = Math.max(0, pieces.length - 1) * 10;
+          const usedMm = barLength + barKerf;
+          return { barLength, barKerf, usedMm };
+        });
+
+        const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
+        const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
+        const itemWeight = (weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000).toFixed(3);
+
+        html += `
+          <tr>
+            <td>${esc(item.label)}</td>
+            <td>${item.totalBars}</td>
+            <td>${totalLength}</td>
+            <td>${totalKerf}</td>
+            <td>${itemWeight}</td>
+          </tr>
+        `;
+      });
+
+    html += `
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>Báo cáo được tạo bởi hệ thống OPOPO</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    const opt = {
+      margin: 10,
+      filename: `Bao-gia-${customer.name}-${Date.now()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+
+  return { render, renderOptimization, handleAddSet, handleAddSegment, exportPDF };
 })();
 
 window.AppUI = AppUI;
