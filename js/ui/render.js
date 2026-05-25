@@ -159,9 +159,14 @@ var AppUI = (() => {
         <p>Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg</p>
         <div class="flex gap-2">
           <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
-          <button class="rounded bg-blue-500 px-2 py-1 text-xs text-white" onclick="exportPDF('${customerId}')">
+          <button class="rounded bg-blue-500 px-2 py-1 text-xs text-white" onclick="exportPDF('${customerId}')" title="Xuất PDF">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          </button>
+          <button class="rounded bg-green-500 px-2 py-1 text-xs text-white" onclick="exportExcel('${customerId}')" title="Xuất Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v4m-7 5h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z" />
             </svg>
           </button>
         </div>
@@ -459,7 +464,158 @@ var AppUI = (() => {
     html2pdf().set(opt).from(element).save();
   }
 
-  return { render, renderOptimization, handleAddSet, handleAddSegment, exportPDF };
+  function exportExcel(customerId) {
+    const customer = findCustomer(customerId);
+    if (!customer) return alert("Không tìm thấy khách hàng");
+
+    const r = window.OptimizationService.optimizeBars(customer);
+    if (r.error) return alert("Lỗi: " + r.error);
+
+    const BAR = 5800;
+    const BAR_LENGTH_MM = 5800;
+    const unit_price = window.AppData.settings.unitPrice;
+
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    const weight = {};
+    aluminumTypes.forEach(a => {
+      weight[a.code] = a.weightPerMeter;
+    });
+
+    function getBaseCode(sourceType) {
+      const parts = sourceType.split("_bead_");
+      return parts[0];
+    }
+
+    const calcWeight = (type, m) => {
+      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
+      if (baseCode === 'beads' && m.bars && m.bars[0]) {
+        const firstPiece = m.bars[0]?.pieces?.[0];
+        if (firstPiece?.originalAluminumCode) {
+          const origCode = firstPiece.originalAluminumCode;
+          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+        }
+      }
+      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+    };
+
+    const totalWeight = Object.values(r)
+      .filter(item => item && item.bars && Array.isArray(item.bars))
+      .reduce((sum, item) => {
+        const firstPiece = item.bars[0]?.pieces?.[0];
+        if (firstPiece) {
+          return sum + calcWeight(firstPiece.sourceType, item);
+        }
+        return sum;
+      }, 0);
+
+    const totalCost = (totalWeight.toFixed(3) * unit_price).toFixed(0);
+
+    // Prepare data for Excel
+    const summaryData = [
+      ['BÁNG GIÁ NHÔM OPOPO'],
+      [],
+      ['Khách hàng:', customer.name],
+      ['Ngày:', new Date().toLocaleDateString('vi-VN')],
+      ['Đơn giá:', unit_price + ' VND/kg'],
+      [],
+      ['TỔNG CỘNG'],
+      ['Số lượng thanh:', r.totalBars],
+      ['Khối lượng:', totalWeight.toFixed(3) + ' kg'],
+      ['Giá tiền:', totalCost + ' VND'],
+      []
+    ];
+
+    const detailHeaders = ['Loại nhôm', 'Số lượng thanh', 'Chiều dài (mm)', 'Chiều dài cắt (mm)', 'Khối lượng (kg)'];
+    const detailData = [];
+
+    Object.entries(r)
+      .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
+      .forEach(([key, item]) => {
+        if (!item || !item.bars || item.totalBars === 0) return;
+
+        const isBeads = key === 'beads';
+        const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+
+        let weight_per_meter = 0;
+        if (isBeads && item.bars && item.bars[0]) {
+          const firstPiece = item.bars[0]?.pieces?.[0];
+          if (firstPiece?.originalAluminumCode) {
+            weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
+          }
+        } else {
+          const baseCode = getBaseCode(sourceType);
+          weight_per_meter = weight[baseCode] || 0;
+        }
+
+        const barsInfo = item.bars.map((b) => {
+          const pieces = b.pieces || [];
+          const barLength = pieces.reduce((sum, p) => sum + Number(p.lengthMm || 0), 0);
+          const barKerf = Math.max(0, pieces.length - 1) * 10;
+          return { barLength, barKerf };
+        });
+
+        const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
+        const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
+        const itemWeight = (weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000).toFixed(3);
+
+        detailData.push([
+          item.label,
+          item.totalBars,
+          totalLength,
+          totalKerf,
+          itemWeight
+        ]);
+      });
+
+    // Create workbook
+    const ws = XLSX.utils.aoa_to_sheet([...summaryData, detailHeaders, ...detailData]);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 }
+    ];
+
+    // Add borders and styling using cell styles
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cellAddress]) continue;
+        
+        // Style header rows
+        if (R < 11 || R === 11) {
+          ws[cellAddress].s = {
+            border: {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              left: { style: 'thin' },
+              right: { style: 'thin' }
+            },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        } else {
+          ws[cellAddress].s = {
+            border: {
+              top: { style: 'thin' },
+              bottom: { style: 'thin' },
+              left: { style: 'thin' },
+              right: { style: 'thin' }
+            }
+          };
+        }
+      }
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Báo giá');
+    XLSX.writeFile(wb, `Bao-gia-${customer.name}-${Date.now()}.xlsx`);
+  }
+
+  return { render, renderOptimization, handleAddSet, handleAddSegment, exportPDF, exportExcel };
 })();
 
 window.AppUI = AppUI;

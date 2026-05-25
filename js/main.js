@@ -9,6 +9,7 @@ const MainApp = (() => {
         window.handleAddSegment = window.AppUI.handleAddSegment;
         window.renderOptimization = window.AppUI.renderOptimization;
         window.exportPDF = window.AppUI.exportPDF;
+        window.exportExcel = window.AppUI.exportExcel;
     }
 
     function bindSettingsModal() {
