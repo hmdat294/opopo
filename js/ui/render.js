@@ -365,7 +365,7 @@ var AppUI = (() => {
           <meta charset="UTF-8">
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Arial', sans-serif; background: white; color: #333; }
+            body { font-family: 'Segoe UI', 'Arial Unicode MS', sans-serif; background: white; color: #333; margin: 5mm; padding: 0; }
             
             .header { 
               border-bottom: 3px solid #FF8C00;
@@ -468,8 +468,11 @@ var AppUI = (() => {
               background: white;
               border: 1px solid #ccc;
               border-radius: 3px;
-              overflow: hidden;
+              overflow: visible;
               margin: 5px 0;
+              min-width: 0;
+              max-width: 100%;
+              word-break: break-word;
             }
             
             .bar-piece {
@@ -534,12 +537,10 @@ var AppUI = (() => {
           </div>
           
           <div class="title">Optimized Cutting</div>
-          <div class="subtitle">Máy cắt: Lưỡi cắt 5mm - Kích thước: Chiều dài 5800mm</div>
           
           <div class="info-box">
             <p><strong>Khách hàng:</strong> ${esc(customer.name)}</p>
             <p><strong>Đơn giá:</strong> ${formatted(unit_price)}/kg</p>
-            <p><strong>Ngày báo giá:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
           </div>
     `;
 
@@ -669,10 +670,10 @@ var AppUI = (() => {
     const element = document.createElement('div');
     element.innerHTML = html;
     const opt = {
-      margin: 8,
+      margin: [5, 5, 5, 5],
       filename: `Bao-gia-${customer.name}-${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
     html2pdf().set(opt).from(element).save();
@@ -804,23 +805,46 @@ var AppUI = (() => {
       // Create workbook with 2 sheets
       const wb = XLSX.utils.book_new();
       
-      // Summary sheet
+      // Summary sheet styling
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-      wsSummary['!cols'] = [
-        { wch: 25 },
-        { wch: 25 }
-      ];
-      XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
-
+      wsSummary['!cols'] = [{ wch: 25 }, { wch: 25 }];
+      
+      // Add styles to summary sheet
+      const headerStyle = { font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'FF8C00' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } } };
+      const dataStyle = { fill: { fgColor: { rgb: 'F0F0F0' } }, alignment: { horizontal: 'left', vertical: 'center' }, border: { top: { style: 'thin', color: { rgb: 'CCCCCC' } }, bottom: { style: 'thin', color: { rgb: 'CCCCCC' } }, left: { style: 'thin', color: { rgb: 'CCCCCC' } }, right: { style: 'thin', color: { rgb: 'CCCCCC' } } } };
+      
+      if (wsSummary['A1']) wsSummary['A1'].s = headerStyle;
+      if (wsSummary['B1']) wsSummary['B1'].s = headerStyle;
+      
       // Detail sheet
       const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
       wsDetail['!cols'] = [
-        { wch: 15 },
-        { wch: 20 },
+        { wch: 18 },
+        { wch: 22 },
         { wch: 15 },
         { wch: 12 },
         { wch: 20 }
       ];
+      
+      // Add styles to detail sheet
+      const detailHeaderStyle = { font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '34495E' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } } };
+      const detailDataStyle = { alignment: { horizontal: 'left', vertical: 'center', wrapText: true }, border: { top: { style: 'thin', color: { rgb: 'DDDDDD' } }, bottom: { style: 'thin', color: { rgb: 'DDDDDD' } }, left: { style: 'thin', color: { rgb: 'DDDDDD' } }, right: { style: 'thin', color: { rgb: 'DDDDDD' } } } };
+      const sectionHeaderStyle = { font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '3498DB' } }, alignment: { horizontal: 'left', vertical: 'center' }, border: { top: { style: 'medium', color: { rgb: '000000' } }, bottom: { style: 'medium', color: { rgb: '000000' } }, left: { style: 'medium', color: { rgb: '000000' } }, right: { style: 'medium', color: { rgb: '000000' } } } };
+      
+      detailData.forEach((row, rowIdx) => {
+        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: 0 });
+        if (detailData[rowIdx] && detailData[rowIdx].length > 0) {
+          if (rowIdx === 0) {
+            wsDetail[cellAddress].s = { ...headerStyle, font: { bold: true, sz: 13, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'FF8C00' } } };
+          } else if (detailData[rowIdx].length === 1 || (detailData[rowIdx][1] === '' && detailData[rowIdx][0] && !detailData[rowIdx][0].toString().includes('Thanh'))) {
+            wsDetail[cellAddress].s = sectionHeaderStyle;
+          } else if (detailData[rowIdx][0] === 'Thanh' || detailData[rowIdx][1] === 'Tên bộ') {
+            wsDetail[cellAddress].s = detailHeaderStyle;
+          }
+        }
+      });
+      
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
       XLSX.utils.book_append_sheet(wb, wsDetail, 'Chi tiết');
 
       XLSX.writeFile(wb, `Bao-gia-${customer.name}-${Date.now()}.xlsx`);
