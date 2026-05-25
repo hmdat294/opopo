@@ -1,0 +1,13 @@
+{
+  "name": "opopo",
+  "version": "1.0.0",
+  "description": "OPOPO - Aluminum optimization system",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site ready'",
+    "dev": "echo 'Open index.html in browser'"
+  },
+  "keywords": ["aluminum", "optimization"],
+  "author": "",
+  "license": "ISC"
+}

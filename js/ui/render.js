@@ -2,6 +2,13 @@ var AppUI = (() => {
   const { appState, BAR_LENGTH_MM, findCustomer } = window.AppData;
   const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+  function getAluminumSelectOptions(selectedValue = "") {
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    return aluminumTypes.map(a => 
+      `<option value="${a.code}" ${selectedValue === a.code ? "selected" : ""}>${esc(a.name)}</option>`
+    ).join("");
+  }
+
   function handleAddSet(customerId) {
     const name = document.getElementById(`setInput_${customerId}`).value.trim();
     if (!name) return alert("Nhập tên bộ.");
@@ -33,72 +40,114 @@ var AppUI = (() => {
       currency: 'VND'
     }).format(money);
 
-    const weight = {
-      'vách C3209': 4.651,
-      'đố C3203': 5.511,
-      'nẹp C3295': 1.572,
-      'khung cửa đi C3328': 7.291,
-      'cánh cửa đi C3303': 8.358,
-      'khung cửa sổ C3318': 5.081,
-      'cánh cửa sổ C8092': 6.171,
+    // Lấy dữ liệu nhôm từ AluminumService
+    const aluminumTypes = window.AluminumService.getAluminumTypes();
+    const weight = {};
+    aluminumTypes.forEach(a => {
+      weight[a.code] = a.weightPerMeter;
+    });
+
+    // Helper để lấy base code (ví dụ: "C3209_bead_1" → "C3209")
+    function getBaseCode(sourceType) {
+      const parts = sourceType.split("_bead_");
+      return parts[0];
+    }
+
+    // Palette màu và cache
+    const colorPalette = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-cyan-500",
+      "bg-orange-500", "bg-teal-500", "bg-lime-500", "bg-sky-500"
+    ];
+    const colorCache = {};
+
+    function getColorForCode(code) {
+      if (!colorCache[code]) {
+        const randomIndex = Math.floor(Math.random() * colorPalette.length);
+        colorCache[code] = colorPalette[randomIndex];
+      }
+      return colorCache[code];
+    }
+
+    const calcWeight = (type, m) => {
+      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
+      
+      // Nếu là beads, tính dựa trên originalAluminumCode
+      if (baseCode === 'beads' && m.bars && m.bars[0]) {
+        const firstPiece = m.bars[0]?.pieces?.[0];
+        if (firstPiece?.originalAluminumCode) {
+          const origCode = firstPiece.originalAluminumCode;
+          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+        }
+      }
+      
+      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
     };
 
-    const calcWeight = (type, m) =>
-      (weight[type] || 0) * (m?.totalBars || 0);
+    // Tính tổng weight từ tất cả kết quả
+    const totalWeight = Object.values(r)
+      .filter(item => item && item.bars && Array.isArray(item.bars))
+      .reduce((sum, item) => {
+        // Tìm code từ pieces
+        const firstPiece = item.bars[0]?.pieces?.[0];
+        if (firstPiece) {
+          return sum + calcWeight(firstPiece.sourceType, item);
+        }
+        return sum;
+      }, 0);
 
-    const totalWeight =
-      calcWeight("vách C3209", r.aluminumVach) +
-      calcWeight("đố C3203", r.aluminumDo) +
-      calcWeight("khung cửa đi C3328", r.aluminumKhungCD) +
-      calcWeight("cánh cửa đi C3303", r.aluminumCanhCD) +
-      calcWeight("khung cửa sổ C3318", r.aluminumKhungCS) +
-      calcWeight("cánh cửa sổ C8092", r.aluminumCanhCS) +
-      calcWeight("nẹp C3295", r.bead);
+    const mk = (name, code, m, c) => {
+      // Handle weight calculation
+      let weight_per_meter = 0;
+      if (code === 'nẹp' && m.bars && m.bars[0]) {
+        const firstPiece = m.bars[0]?.pieces?.[0];
+        if (firstPiece?.originalAluminumCode) {
+          weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
+        }
+      } else {
+        const baseCode = getBaseCode(code);
+        weight_per_meter = weight[baseCode] || 0;
+      }
+      
+      // Tính tổng length cho mỗi bar riêng biệt
+      const barsInfo = m.bars.map((b) => {
+        const pieces = b.pieces || [];
+        const barLength = pieces.reduce(
+          (sum, p) => sum + Number(p.lengthMm || 0),
+          0
+        );
+        const barKerf = Math.max(0, pieces.length - 1) * 10;
+        const usedMm = barLength + barKerf;
+        const waste = BAR - usedMm;
+        return { usedMm, barLength, barKerf, waste, pieces };
+      });
 
-    const mk = (t, m, c) => {
-      const { totalLength, totalKerf } = m.bars.reduce(
-        (acc, b) => {
-          const pieces = b.pieces || [];
-
-          const barLength = pieces.reduce(
-            (sum, p) => sum + Number(p.lengthMm || 0),
-            0
-          );
-
-          const barKerf = Math.max(0, pieces.length - 1) * 10;
-
-          acc.totalLength += barLength;
-          acc.totalKerf += barKerf;
-
-          return acc;
-        },
-        { totalLength: 0, totalKerf: 0 }
-      );
-
-      const totalWithKerf = totalLength + totalKerf;
-      const barsNeeded = Math.ceil(totalWithKerf / BAR);
-      const totalCapacity = barsNeeded * BAR;
-      const waste = totalCapacity - totalWithKerf;
+      const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
+      const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
+      const totalWeight = (weight_per_meter * BAR_LENGTH_MM * m.totalBars / 1000000).toFixed(3);
 
       return m.totalBars == 0 ? `` : `
         <div class="rounded border p-2">
           <div class="flex justify-between">
             <p class="font-normal">
-              ${m.totalBars} ${t} | ${totalLength}mm + ${totalKerf}mm | ${weight[t] * m.totalBars}kg
-            </p>
-            <p class="font-normal">
-             Còn lại ${waste}mm
+              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${totalWeight}kg
             </p>
           </div>
-          ${m.bars.map((b) => `
+          ${barsInfo.map((info, idx) => `
             <div class="mt-2">
               <div class="flex h-8 overflow-hidden rounded border">
-                ${b.pieces.map((p) => `
+                ${info.pieces.map((p) => `
                   <div class="${c} flex items-center justify-center border-r px-1 text-md text-white text-center text-xs"
-                       style="width:${(p.usedMm / BAR_LENGTH_MM) * 100}%">
+                       style="width:${(p.usedMm / BAR) * 100}%">
                     ${esc(p.setName)} - ${p.lengthMm}mm
                   </div>
                 `).join("")}
+                ${info.waste > 0 ? `
+                  <div class="flex items-center justify-center border-r px-1 text-xs bg-gray-300 text-gray-700"
+                       style="width:${(info.waste / BAR) * 100}%">
+                    Thừa ${info.waste}mm
+                  </div>
+                ` : ""}
               </div>
             </div>
           `).join("")}
@@ -111,13 +160,18 @@ var AppUI = (() => {
         <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
       </div>  
       <div class="mt-2 space-y-2">
-        ${mk("vách C3209", r.aluminumVach, "bg-blue-500")}
-        ${mk("đố C3203", r.aluminumDo, "bg-indigo-500")}
-        ${mk("khung cửa đi C3328", r.aluminumKhungCD, "bg-red-500")}
-        ${mk("cánh cửa đi C3303", r.aluminumCanhCD, "bg-pink-500")}
-        ${mk("khung cửa sổ C3318", r.aluminumKhungCS, "bg-yellow-500")}
-        ${mk("cánh cửa sổ C8092", r.aluminumCanhCS, "bg-green-500")}
-        ${mk("nẹp C3295", r.bead, "bg-emerald-500")}
+        ${Object.entries(r)
+          .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
+          .map(([key, item]) => {
+            if (!item || !item.bars || item.totalBars === 0) return '';
+            
+            const isBeads = key === 'beads';
+            const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+            const color = isBeads ? 'bg-yellow-500' : getColorForCode(sourceType);
+            
+            return mk(item.label, sourceType, item, color);
+          })
+          .join("")}
       </div>`;
   }
 
@@ -180,13 +234,8 @@ var AppUI = (() => {
               <div class="flex gap-2">
                 <input id="segLength_${s.id}" type="number" min="1" max="${BAR_LENGTH_MM}" placeholder="Chiều dài (mm)" class="rounded border px-2 py-1 w-full">
                 <input id="segQty_${s.id}" type="number" min="1" value="1" class="rounded border px-2 py-1 w-1/6">
-                <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/4">
-                  <option value="vach">Vách</option>
-                  <option value="do">Đố</option>
-                  <option value="khung_cd">Khung CĐ</option>
-                  <option value="canh_cd">Cánh CĐ</option>
-                  <option value="khung_cs">Khung CS</option>
-                  <option value="canh_cs">Cánh CS</option>
+                <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/2">
+                  ${getAluminumSelectOptions()}
                 </select>
                 <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -220,12 +269,7 @@ var AppUI = (() => {
                           </td>
                           <td class="w-3/12 pr-2">
                             <select onchange="updateSegment('${c.id}','${s.id}','${g.id}','segmentType',this.value)" class="rounded border px-2 py-1 w-full">
-                              <option value="vach" ${g.segmentType === "vach" ? "selected" : ""}>Vách</option>
-                              <option value="do" ${g.segmentType === "do" ? "selected" : ""}>Đố</option>
-                              <option value="khung_cd" ${g.segmentType === "khung_cd" ? "selected" : ""}>Khung CĐ</option>
-                              <option value="canh_cd" ${g.segmentType === "canh_cd" ? "selected" : ""}>Cánh CĐ</option>
-                              <option value="khung_cs" ${g.segmentType === "khung_cs" ? "selected" : ""}>Khung CS</option>
-                              <option value="canh_cs" ${g.segmentType === "canh_cs" ? "selected" : ""}>Cánh CS</option>
+                              ${getAluminumSelectOptions(g.segmentType)}
                             </select>
                           </td>
                           <td class="">

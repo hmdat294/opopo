@@ -29,7 +29,8 @@ const MainApp = (() => {
         });
     }
 
-    function start() {
+    async function start() {
+        await window.AluminumService.loadAluminumTypes();
         bindGlobalActions();
         bindTopButtons();
         window.AppData.loadState();

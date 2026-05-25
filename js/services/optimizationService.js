@@ -50,139 +50,124 @@ const OptimizationService = (() => {
     }
 
     function buildMaterialPieces(customer) {
-        const aluminumVachPieces = [];
-        const aluminumDoPieces = [];
-        const aluminumKhungCDPieces = [];
-        const aluminumCanhCDPieces = [];
-        const aluminumKhungCSPieces = [];
-        const aluminumCanhCSPieces = [];
-        const beadPieces = [];
+        // Tự động group segments theo code thay vì hardcoded
+        const materialPiecesMap = {}; // { "C3209": [...], "C3203": [...], ... }
+        const beadPieces = {}; // { "C3209_bead_1": [...], ... }
+
+        const aluminumService = window.AluminumService;
 
         customer.sets.forEach((set) => {
             set.segments.forEach((segment) => {
                 const lengthMm = Number(segment.lengthMm) || 0;
                 const quantity = Number(segment.quantity) || 0;
-                const segmentType = segment.segmentType;
+                const aluminumCode = segment.segmentType;
                 if (lengthMm <= 0 || quantity <= 0) return;
 
+                // Initialize array nếu chưa tồn tại
+                if (!materialPiecesMap[aluminumCode]) {
+                    materialPiecesMap[aluminumCode] = [];
+                }
+
+                // Thêm pieces cho nhôm chính
                 for (let i = 0; i < quantity; i += 1) {
-
-                    const map = {
-                        vach: aluminumVachPieces,
-                        do: aluminumDoPieces,
-                        khung_cd: aluminumKhungCDPieces,
-                        canh_cd: aluminumCanhCDPieces,
-                        khung_cs: aluminumKhungCSPieces,
-                        canh_cs: aluminumCanhCSPieces
-                    };
-
-                    const targetAluminum = map[segmentType];
-
-                    if (!targetAluminum) return;
-
-                    targetAluminum.push({
+                    materialPiecesMap[aluminumCode].push({
                         setName: set.name,
-                        sourceType: segmentType,
+                        sourceType: aluminumCode,
                         lengthMm,
                         usedMm: lengthMm + EFFECTIVE_KERF_MM
                     });
                 }
 
-                const beadMap = {
-                    vach: 1,
-                    do: 2,
-                    khung_cd: 0,
-                    canh_cd: 1,
-                    khung_cs: 0,
-                    canh_cs: 1
-                };
+                // Thêm bead pieces dựa vào profileCount
+                const aluminum = aluminumService.getAluminumByCode(aluminumCode);
+                const profileCount = aluminum?.profileCount || 0;
 
-                const beadMultiplier = beadMap[segmentType] ?? 1;
-                
-                for (let i = 0; i < quantity * beadMultiplier; i += 1) {
-                    beadPieces.push({
-                        setName: set.name,
-                        sourceType: segmentType,
-                        lengthMm,
-                        usedMm: lengthMm + EFFECTIVE_KERF_MM
-                    });
+                // Tạo nẹp riêng cho mỗi profile
+                for (let beadIdx = 1; beadIdx <= profileCount; beadIdx++) {
+                    const beadCode = `${aluminumCode}_bead_${beadIdx}`;
+                    if (!beadPieces[beadCode]) {
+                        beadPieces[beadCode] = [];
+                    }
+                    
+                    for (let i = 0; i < quantity; i += 1) {
+                        beadPieces[beadCode].push({
+                            setName: set.name,
+                            sourceType: beadCode,
+                            originalAluminumCode: aluminumCode,
+                            lengthMm,
+                            usedMm: lengthMm + EFFECTIVE_KERF_MM
+                        });
+                    }
                 }
             });
         });
 
         return {
-            aluminumVachPieces,
-            aluminumDoPieces,
-            aluminumKhungCDPieces,
-            aluminumCanhCDPieces,
-            aluminumKhungCSPieces,
-            aluminumCanhCSPieces,
+            materialPiecesMap,
             beadPieces
         };
     }
 
     function optimizeBars(customer) {
-
         const {
-            aluminumVachPieces,
-            aluminumDoPieces,
-            aluminumKhungCDPieces,
-            aluminumCanhCDPieces,
-            aluminumKhungCSPieces,
-            aluminumCanhCSPieces,
+            materialPiecesMap,
             beadPieces
         } = buildMaterialPieces(customer);
 
-        const aluminumVach = optimizePieceList(aluminumVachPieces, "Vach");
-        const aluminumDo = optimizePieceList(aluminumDoPieces, "Do");
-        const aluminumKhungCD = optimizePieceList(aluminumKhungCDPieces, "Khung cua di");
-        const aluminumCanhCD = optimizePieceList(aluminumCanhCDPieces, "Canh cua di");
-        const aluminumKhungCS = optimizePieceList(aluminumKhungCSPieces, "Khung cua so");
-        const aluminumCanhCS = optimizePieceList(aluminumCanhCSPieces, "Canh cua so");
-        const bead = optimizePieceList(beadPieces, "Nep");
+        // Tối ưu hóa từng nhôm chính
+        const materialResults = {};
+        Object.entries(materialPiecesMap).forEach(([aluminumCode, pieces]) => {
+            const aluminum = window.AluminumService.getAluminumByCode(aluminumCode);
+            const name = aluminum?.name || aluminumCode;
+            materialResults[aluminumCode] = optimizePieceList(pieces, name);
+        });
 
-        const hasError = [
-            aluminumVach,
-            aluminumDo,
-            aluminumKhungCD,
-            aluminumCanhCD,
-            aluminumKhungCS,
-            aluminumCanhCS,
-            bead
-        ].find((item) => item.error);
-
+        // Check errors từ các nhôm chính
+        const mainResults = Object.values(materialResults);
+        const hasError = mainResults.find((item) => item.error);
         if (hasError) return { error: `${hasError.label}: ${hasError.error}` };
 
-        const totalBars =
-            aluminumVach.totalBars +
-            aluminumDo.totalBars +
-            aluminumKhungCD.totalBars +
-            aluminumCanhCD.totalBars +
-            aluminumKhungCS.totalBars +
-            aluminumCanhCS.totalBars +
-            bead.totalBars;
+        // Gộp tất cả bead pieces lại
+        const allBeadPieces = [];
+        Object.entries(beadPieces).forEach(([beadCode, beadArray]) => {
+            allBeadPieces.push(...beadArray);
+        });
 
-        const totalPieces =
-            aluminumVach.totalPieces +
-            aluminumDo.totalPieces +
-            aluminumKhungCD.totalPieces +
-            aluminumCanhCD.totalPieces +
-            aluminumKhungCS.totalPieces +
-            aluminumCanhCS.totalPieces +
-            bead.totalPieces;
+        let beadResult = null;
+        if (allBeadPieces.length > 0) {
+            beadResult = optimizePieceList(allBeadPieces, "nẹp kính 3295");
+            if (beadResult.error) {
+                throw new Error(`${beadResult.label}: ${beadResult.error}`);
+            }
+        }
 
-        return {
+        // Tính tổng
+        let totalBars = 0;
+        let totalPieces = 0;
+        
+        Object.values(materialResults).forEach(result => {
+            totalBars += result.totalBars;
+            totalPieces += result.totalPieces;
+        });
+
+        if (beadResult) {
+            totalBars += beadResult.totalBars;
+            totalPieces += beadResult.totalPieces;
+        }
+
+        // Build result object
+        const result = {
             kerfUsedMm: EFFECTIVE_KERF_MM,
             totalBars,
             totalPieces,
-            aluminumVach,
-            aluminumDo,
-            aluminumKhungCD,
-            aluminumCanhCD,
-            aluminumKhungCS,
-            aluminumCanhCS,
-            bead
+            ...materialResults
         };
+
+        if (beadResult) {
+            result.beads = beadResult;
+        }
+
+        return result;
     }
 
     return {
