@@ -465,8 +465,15 @@ var AppUI = (() => {
   }
 
   function exportExcel(customerId) {
+    // Wait for XLSX to be available
     if (typeof XLSX === 'undefined') {
-      return alert("Thư viện Excel chưa load. Vui lòng tải lại trang.");
+      // Retry after short delay
+      return setTimeout(() => {
+        if (typeof XLSX === 'undefined') {
+          return alert("Thư viện Excel chưa load. Vui lòng tải lại trang và thử lại sau.");
+        }
+        exportExcel(customerId);
+      }, 500);
     }
 
     const customer = findCustomer(customerId);
@@ -579,29 +586,34 @@ var AppUI = (() => {
         });
       });
 
-    // Create workbook with 2 sheets
-    const wb = XLSX.utils.book_new();
-    
-    // Summary sheet
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    wsSummary['!cols'] = [
-      { wch: 25 },
-      { wch: 25 }
-    ];
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
+    try {
+      // Create workbook with 2 sheets
+      const wb = XLSX.utils.book_new();
+      
+      // Summary sheet
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      wsSummary['!cols'] = [
+        { wch: 25 },
+        { wch: 25 }
+      ];
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
 
-    // Detail sheet
-    const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
-    wsDetail['!cols'] = [
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 20 }
-    ];
-    XLSX.utils.book_append_sheet(wb, wsDetail, 'Chi tiết');
+      // Detail sheet
+      const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
+      wsDetail['!cols'] = [
+        { wch: 15 },
+        { wch: 20 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 20 }
+      ];
+      XLSX.utils.book_append_sheet(wb, wsDetail, 'Chi tiết');
 
-    XLSX.writeFile(wb, `Bao-gia-${customer.name}-${Date.now()}.xlsx`);
+      XLSX.writeFile(wb, `Bao-gia-${customer.name}-${Date.now()}.xlsx`);
+    } catch (error) {
+      console.error('Lỗi xuất Excel:', error);
+      alert("Lỗi khi xuất file Excel. Vui lòng thử lại.");
+    }
   }
 
   return { render, renderOptimization, handleAddSet, handleAddSegment, exportPDF, exportExcel };
