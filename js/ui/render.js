@@ -324,8 +324,10 @@ var AppUI = (() => {
 
     const aluminumTypes = window.AluminumService.getAluminumTypes();
     const weight = {};
+    const aluminumNames = {};
     aluminumTypes.forEach(a => {
       weight[a.code] = a.weightPerMeter;
+      aluminumNames[a.code] = a.name;
     });
 
     function getBaseCode(sourceType) {
@@ -362,42 +364,191 @@ var AppUI = (() => {
         <head>
           <meta charset="UTF-8">
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-            h1 { text-align: center; color: #2c3e50; }
-            .info { margin: 20px 0; border: 1px solid #ddd; padding: 10px; background: #f9f9f9; }
-            .summary { margin: 20px 0; font-size: 16px; font-weight: bold; border: 2px solid #27ae60; padding: 15px; background: #ecf0f1; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #bbb; padding: 10px; text-align: left; }
-            th { background: #34495e; color: white; }
-            tr:nth-child(even) { background: #f2f2f2; }
-            .bar-item { margin: 10px 0; padding: 10px; background: #ecf0f1; border-left: 5px solid #3498db; }
-            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; text-align: center; color: #7f8c8d; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Arial', sans-serif; background: white; color: #333; }
+            
+            .header { 
+              border-bottom: 3px solid #FF8C00;
+              padding: 20px 0;
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            
+            .company-info { 
+              flex: 1;
+            }
+            
+            .company-name {
+              font-size: 14px;
+              font-weight: bold;
+              color: #FF8C00;
+              margin-bottom: 5px;
+            }
+            
+            .company-desc {
+              font-size: 11px;
+              color: #666;
+              line-height: 1.4;
+            }
+            
+            .job-info {
+              text-align: right;
+              font-size: 12px;
+            }
+            
+            .job-info strong {
+              font-size: 14px;
+              color: #333;
+            }
+            
+            .title {
+              text-align: center;
+              font-size: 24px;
+              font-weight: bold;
+              margin: 20px 0 10px 0;
+              color: #333;
+            }
+            
+            .subtitle {
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+              margin-bottom: 20px;
+            }
+            
+            .info-box {
+              background: #f5f5f5;
+              border: 1px solid #ddd;
+              padding: 12px;
+              margin-bottom: 20px;
+              border-radius: 4px;
+            }
+            
+            .info-box p {
+              font-size: 11px;
+              margin: 4px 0;
+            }
+            
+            .aluminum-section {
+              margin-bottom: 25px;
+              page-break-inside: avoid;
+            }
+            
+            .aluminum-header {
+              background: #34495e;
+              color: white;
+              padding: 10px;
+              font-weight: bold;
+              font-size: 12px;
+              border-radius: 4px 4px 0 0;
+            }
+            
+            .bars-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 15px;
+              border: 1px solid #bbb;
+            }
+            
+            .bars-table tr {
+              border-bottom: 1px solid #ddd;
+            }
+            
+            .bars-table td {
+              padding: 8px;
+              font-size: 10px;
+            }
+            
+            .bar-viz {
+              display: flex;
+              align-items: center;
+              height: 30px;
+              background: white;
+              border: 1px solid #ccc;
+              border-radius: 3px;
+              overflow: hidden;
+              margin: 5px 0;
+            }
+            
+            .bar-piece {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              color: white;
+              font-size: 9px;
+              font-weight: bold;
+              border-right: 1px solid rgba(255,255,255,0.3);
+            }
+            
+            .bar-waste {
+              background: #ddd;
+              color: #666;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-right: none;
+            }
+            
+            .summary-box {
+              background: #ecf0f1;
+              border: 2px solid #27ae60;
+              padding: 12px;
+              margin: 20px 0;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 12px;
+            }
+            
+            .summary-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 6px 0;
+            }
+            
+            .footer {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 1px solid #ddd;
+              text-align: center;
+              font-size: 10px;
+              color: #999;
+            }
           </style>
         </head>
         <body>
-          <h1>Báo giá nhôm OPOPO</h1>
-          <div class="info">
+          <div class="header">
+            <div class="company-info">
+              <div class="company-name">OPOPO</div>
+              <div class="company-desc">
+                Hệ thống tối ưu hóa cắt nhôm<br>
+                Tính toán và thiết kế cắt hiệu quả
+              </div>
+            </div>
+            <div class="job-info">
+              <div><strong>Job: ${customer.name}</strong></div>
+              <div>Ngày: ${new Date().toLocaleDateString('vi-VN')}</div>
+            </div>
+          </div>
+          
+          <div class="title">Optimized Cutting</div>
+          <div class="subtitle">Máy cắt: Lưỡi cắt 5mm - Kích thước: Chiều dài 5800mm</div>
+          
+          <div class="info-box">
             <p><strong>Khách hàng:</strong> ${esc(customer.name)}</p>
-            <p><strong>Ngày:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
             <p><strong>Đơn giá:</strong> ${formatted(unit_price)}/kg</p>
+            <p><strong>Ngày báo giá:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
           </div>
-
-          <div class="summary">
-            <p>Tổng: ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg | ${formatted(totalCost)}</p>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Loại nhôm</th>
-                <th>Số lượng thanh</th>
-                <th>Chiều dài (mm)</th>
-                <th>Chiều dài cắt (mm)</th>
-                <th>Khối lượng (kg)</th>
-              </tr>
-            </thead>
-            <tbody>
     `;
+
+    // Generate color palette
+    const colorPalette = [
+      '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', 
+      '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'
+    ];
+    let colorIndex = 0;
 
     Object.entries(r)
       .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
@@ -406,7 +557,8 @@ var AppUI = (() => {
 
         const isBeads = key === 'beads';
         const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
-        
+        const aluminumName = isBeads ? 'Nẹp' : aluminumNames[getBaseCode(sourceType)] || sourceType;
+
         let weight_per_meter = 0;
         if (isBeads && item.bars && item.bars[0]) {
           const firstPiece = item.bars[0]?.pieces?.[0];
@@ -418,35 +570,97 @@ var AppUI = (() => {
           weight_per_meter = weight[baseCode] || 0;
         }
 
-        const barsInfo = item.bars.map((b) => {
-          const pieces = b.pieces || [];
+        const barsInfo = item.bars.map((bar, barIdx) => {
+          const pieces = bar.pieces || [];
           const barLength = pieces.reduce((sum, p) => sum + Number(p.lengthMm || 0), 0);
           const barKerf = Math.max(0, pieces.length - 1) * 10;
           const usedMm = barLength + barKerf;
-          return { barLength, barKerf, usedMm };
+          const waste = BAR - usedMm;
+          const wastePercent = ((waste / BAR) * 100).toFixed(1);
+
+          return { pieces, barLength, barKerf, usedMm, waste, wastePercent };
         });
 
         const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
         const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
         const itemWeight = (weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000).toFixed(3);
+        const wastePercent = (((BAR * item.totalBars - totalLength - totalKerf) / (BAR * item.totalBars)) * 100).toFixed(1);
+
+        const color = colorPalette[colorIndex % colorPalette.length];
+        colorIndex++;
 
         html += `
-          <tr>
-            <td>${esc(item.label)}</td>
-            <td>${item.totalBars}</td>
-            <td>${totalLength}</td>
-            <td>${totalKerf}</td>
-            <td>${itemWeight}</td>
-          </tr>
+          <div class="aluminum-section">
+            <div class="aluminum-header" style="background: ${color}">
+              ${aluminumName} | ${item.label} - Tổng: ${item.totalBars} thanh | ${totalLength}mm + ${totalKerf}mm | ${itemWeight}kg
+            </div>
+            <table class="bars-table">
+              <tbody>
+        `;
+
+        barsInfo.forEach((info, idx) => {
+          html += `
+            <tr>
+              <td style="width: 15%; font-weight: bold;">Thanh ${idx + 1}</td>
+              <td style="width: 85%;">
+                <div class="bar-viz">
+          `;
+
+          info.pieces.forEach((piece) => {
+            const pieceName = piece.setName || 'N/A';
+            const pieceLength = piece.lengthMm || 0;
+            const piecePercent = (pieceLength / BAR) * 100;
+            html += `
+              <div class="bar-piece" style="width: ${piecePercent.toFixed(1)}%; background: ${color}; opacity: 0.8;">
+                ${pieceName}
+              </div>
+            `;
+          });
+
+          if (info.waste > 0) {
+            const wastePercent = (info.waste / BAR) * 100;
+            html += `
+              <div class="bar-piece bar-waste" style="width: ${wastePercent.toFixed(1)}%; flex-shrink: 0;">
+                Thừa ${info.waste}mm
+              </div>
+            `;
+          }
+
+          html += `
+                </div>
+                <div style="font-size: 9px; color: #666; margin-top: 3px; text-align: right;">
+                  Sử dụng: ${info.usedMm}mm / Lãng phí: ${info.wastePercent}%
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += `
+              </tbody>
+            </table>
+          </div>
         `;
       });
 
     html += `
-            </tbody>
-          </table>
+          <div class="summary-box">
+            <div class="summary-row">
+              <span>Tổng số thanh:</span>
+              <span>${r.totalBars}</span>
+            </div>
+            <div class="summary-row">
+              <span>Tổng khối lượng:</span>
+              <span>${totalWeight.toFixed(3)} kg</span>
+            </div>
+            <div class="summary-row">
+              <span>Tổng giá tiền:</span>
+              <span>${formatted(totalCost)}</span>
+            </div>
+          </div>
 
           <div class="footer">
-            <p>Báo cáo được tạo bởi hệ thống OPOPO</p>
+            <p>Báo cáo được tạo bởi hệ thống OPOPO - ${new Date().toLocaleString('vi-VN')}</p>
           </div>
         </body>
       </html>
@@ -455,7 +669,7 @@ var AppUI = (() => {
     const element = document.createElement('div');
     element.innerHTML = html;
     const opt = {
-      margin: 10,
+      margin: 8,
       filename: `Bao-gia-${customer.name}-${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
