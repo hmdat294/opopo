@@ -4,7 +4,7 @@ var AppUI = (() => {
 
   function getAluminumSelectOptions(selectedValue = "") {
     const aluminumTypes = window.AluminumService.getAluminumTypes();
-    return aluminumTypes.map(a => 
+    return aluminumTypes.map(a =>
       `<option value="${a.code}" ${selectedValue === a.code ? "selected" : ""}>${esc(a.name)}</option>`
     ).join("");
   }
@@ -71,7 +71,7 @@ var AppUI = (() => {
 
     const calcWeight = (type, m) => {
       const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
-      
+
       // Nếu là beads, tính dựa trên originalAluminumCode
       if (baseCode === 'beads' && m.bars && m.bars[0]) {
         const firstPiece = m.bars[0]?.pieces?.[0];
@@ -80,7 +80,7 @@ var AppUI = (() => {
           return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
         }
       }
-      
+
       return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
     };
 
@@ -108,7 +108,7 @@ var AppUI = (() => {
         const baseCode = getBaseCode(code);
         weight_per_meter = weight[baseCode] || 0;
       }
-      
+
       // Tính tổng length cho mỗi bar riêng biệt
       const barsInfo = m.bars.map((b) => {
         const pieces = b.pieces || [];
@@ -173,17 +173,17 @@ var AppUI = (() => {
       </div>  
       <div class="mt-2 space-y-2">
         ${Object.entries(r)
-          .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
-          .map(([key, item]) => {
-            if (!item || !item.bars || item.totalBars === 0) return '';
-            
-            const isBeads = key === 'beads';
-            const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
-            const color = isBeads ? 'bg-yellow-500' : getColorForCode(sourceType);
-            
-            return mk(item.label, sourceType, item, color);
-          })
-          .join("")}
+        .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
+        .map(([key, item]) => {
+          if (!item || !item.bars || item.totalBars === 0) return '';
+
+          const isBeads = key === 'beads';
+          const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+          const color = isBeads ? 'bg-yellow-500' : getColorForCode(sourceType);
+
+          return mk(item.label, sourceType, item, color);
+        })
+        .join("")}
       </div>`;
   }
 
@@ -197,15 +197,15 @@ var AppUI = (() => {
           <b class="cursor-pointer" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
           <div class="flex gap-2">
             ${hasSeg && !c.isCollapsed ?
-            `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
+          `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
               Tổng số thanh
             </button>` : ""}
             <button class="rounded bg-emerald-500 px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
               ${c.isCollapsed ?
-              `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
                   </svg>`
-              :`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+          : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
               </svg>`}
             </button>
@@ -364,8 +364,8 @@ var AppUI = (() => {
         <head>
           <meta charset="UTF-8">
           <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', 'Arial Unicode MS', sans-serif; background: white; color: #333; margin: 5mm; padding: 0; }
+            * { margin: 0; padding: 0 5px 0 0; box-sizing: border-box;}
+            body { font-family: 'Segoe UI', 'Arial Unicode MS', sans-serif; background: white; color: #333; }
             
             .header { 
               border-bottom: 3px solid #FF8C00;
@@ -422,7 +422,7 @@ var AppUI = (() => {
               background: #f5f5f5;
               border: 1px solid #ddd;
               padding: 12px;
-              margin-bottom: 20px;
+              margin: 0 0 20px 0;
               border-radius: 4px;
             }
             
@@ -432,24 +432,21 @@ var AppUI = (() => {
             }
             
             .aluminum-section {
-              margin-bottom: 25px;
-              page-break-inside: avoid;
+              margin: 0 0 25px 0;
             }
             
             .aluminum-header {
-              background: #34495e;
-              color: white;
-              padding: 10px;
+              padding: 5px 0;
               font-weight: bold;
               font-size: 12px;
-              border-radius: 4px 4px 0 0;
             }
             
             .bars-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 15px;
               border: 1px solid #bbb;
+              border-radius: 4px;
+              overflow: hidden;
             }
             
             .bars-table tr {
@@ -499,7 +496,6 @@ var AppUI = (() => {
               background: #ecf0f1;
               border: 2px solid #27ae60;
               padding: 12px;
-              margin: 20px 0;
               border-radius: 4px;
               font-weight: bold;
               font-size: 12px;
@@ -513,7 +509,6 @@ var AppUI = (() => {
             
             .footer {
               margin-top: 30px;
-              padding-top: 15px;
               border-top: 1px solid #ddd;
               text-align: center;
               font-size: 10px;
@@ -546,7 +541,7 @@ var AppUI = (() => {
 
     // Generate color palette
     const colorPalette = [
-      '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', 
+      '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
       '#1abc9c', '#e67e22', '#34495e', '#16a085', '#c0392b'
     ];
     let colorIndex = 0;
@@ -592,8 +587,8 @@ var AppUI = (() => {
 
         html += `
           <div class="aluminum-section">
-            <div class="aluminum-header" style="background: ${color}">
-              ${aluminumName} | ${item.label} - Tổng: ${item.totalBars} thanh | ${totalLength}mm + ${totalKerf}mm | ${itemWeight}kg
+            <div class="aluminum-header">
+              ${item.label} - Tổng: ${item.totalBars} thanh | ${totalLength}mm + ${totalKerf}mm | ${itemWeight}kg
             </div>
             <table class="bars-table">
               <tbody>
@@ -602,8 +597,8 @@ var AppUI = (() => {
         barsInfo.forEach((info, idx) => {
           html += `
             <tr>
-              <td style="width: 15%; font-weight: bold;">Thanh ${idx + 1}</td>
-              <td style="width: 85%;">
+              <td style="width: 10%; font-weight: bold;">Thanh ${idx + 1}</td>
+              <td style="width: 90%;">
                 <div class="bar-viz">
           `;
 
@@ -754,7 +749,7 @@ var AppUI = (() => {
 
     // Prepare detail sheet with all bars and segments
     const detailData = [['CHI TIẾT ĐỀN CẮTDẠN']];
-    
+
     Object.entries(r)
       .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
       .forEach(([key, item]) => {
@@ -804,18 +799,18 @@ var AppUI = (() => {
     try {
       // Create workbook with 2 sheets
       const wb = XLSX.utils.book_new();
-      
+
       // Summary sheet styling
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
       wsSummary['!cols'] = [{ wch: 25 }, { wch: 25 }];
-      
+
       // Add styles to summary sheet
       const headerStyle = { font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'FF8C00' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } } };
       const dataStyle = { fill: { fgColor: { rgb: 'F0F0F0' } }, alignment: { horizontal: 'left', vertical: 'center' }, border: { top: { style: 'thin', color: { rgb: 'CCCCCC' } }, bottom: { style: 'thin', color: { rgb: 'CCCCCC' } }, left: { style: 'thin', color: { rgb: 'CCCCCC' } }, right: { style: 'thin', color: { rgb: 'CCCCCC' } } } };
-      
+
       if (wsSummary['A1']) wsSummary['A1'].s = headerStyle;
       if (wsSummary['B1']) wsSummary['B1'].s = headerStyle;
-      
+
       // Detail sheet
       const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
       wsDetail['!cols'] = [
@@ -825,12 +820,12 @@ var AppUI = (() => {
         { wch: 12 },
         { wch: 20 }
       ];
-      
+
       // Add styles to detail sheet
       const detailHeaderStyle = { font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '34495E' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } } };
       const detailDataStyle = { alignment: { horizontal: 'left', vertical: 'center', wrapText: true }, border: { top: { style: 'thin', color: { rgb: 'DDDDDD' } }, bottom: { style: 'thin', color: { rgb: 'DDDDDD' } }, left: { style: 'thin', color: { rgb: 'DDDDDD' } }, right: { style: 'thin', color: { rgb: 'DDDDDD' } } } };
       const sectionHeaderStyle = { font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '3498DB' } }, alignment: { horizontal: 'left', vertical: 'center' }, border: { top: { style: 'medium', color: { rgb: '000000' } }, bottom: { style: 'medium', color: { rgb: '000000' } }, left: { style: 'medium', color: { rgb: '000000' } }, right: { style: 'medium', color: { rgb: '000000' } } } };
-      
+
       detailData.forEach((row, rowIdx) => {
         const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: 0 });
         if (detailData[rowIdx] && detailData[rowIdx].length > 0) {
@@ -843,7 +838,7 @@ var AppUI = (() => {
           }
         }
       });
-      
+
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
       XLSX.utils.book_append_sheet(wb, wsDetail, 'Chi tiết');
 
