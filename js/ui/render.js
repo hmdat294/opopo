@@ -465,6 +465,10 @@ var AppUI = (() => {
   }
 
   function exportExcel(customerId) {
+    if (typeof XLSX === 'undefined') {
+      return alert("Thư viện Excel chưa load. Vui lòng tải lại trang.");
+    }
+
     const customer = findCustomer(customerId);
     if (!customer) return alert("Không tìm thấy khách hàng");
 
@@ -477,8 +481,10 @@ var AppUI = (() => {
 
     const aluminumTypes = window.AluminumService.getAluminumTypes();
     const weight = {};
+    const aluminumNames = {};
     aluminumTypes.forEach(a => {
       weight[a.code] = a.weightPerMeter;
+      aluminumNames[a.code] = a.name;
     });
 
     function getBaseCode(sourceType) {
@@ -510,7 +516,7 @@ var AppUI = (() => {
 
     const totalCost = (totalWeight.toFixed(3) * unit_price).toFixed(0);
 
-    // Prepare data for Excel
+    // Prepare summary sheet
     const summaryData = [
       ['BÁNG GIÁ NHÔM OPOPO'],
       [],
@@ -522,12 +528,11 @@ var AppUI = (() => {
       ['Số lượng thanh:', r.totalBars],
       ['Khối lượng:', totalWeight.toFixed(3) + ' kg'],
       ['Giá tiền:', totalCost + ' VND'],
-      []
     ];
 
-    const detailHeaders = ['Loại nhôm', 'Số lượng thanh', 'Chiều dài (mm)', 'Chiều dài cắt (mm)', 'Khối lượng (kg)'];
-    const detailData = [];
-
+    // Prepare detail sheet with all bars and segments
+    const detailData = [['CHI TIẾT ĐỀN CẮTDẠN']];
+    
     Object.entries(r)
       .filter(([key]) => key !== 'kerfUsedMm' && key !== 'totalBars' && key !== 'totalPieces' && key !== 'error')
       .forEach(([key, item]) => {
@@ -535,6 +540,7 @@ var AppUI = (() => {
 
         const isBeads = key === 'beads';
         const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
+        const aluminumName = isBeads ? 'Nẹp' : aluminumNames[getBaseCode(sourceType)] || sourceType;
 
         let weight_per_meter = 0;
         if (isBeads && item.bars && item.bars[0]) {
@@ -547,71 +553,54 @@ var AppUI = (() => {
           weight_per_meter = weight[baseCode] || 0;
         }
 
-        const barsInfo = item.bars.map((b) => {
-          const pieces = b.pieces || [];
+        detailData.push([]);
+        detailData.push([aluminumName + ' - ' + item.label]);
+        detailData.push(['Thanh', 'Tên bộ', 'Chiều dài (mm)', 'Số lượng', 'Loại nhôm']);
+
+        item.bars.forEach((bar, barIndex) => {
+          const pieces = bar.pieces || [];
           const barLength = pieces.reduce((sum, p) => sum + Number(p.lengthMm || 0), 0);
           const barKerf = Math.max(0, pieces.length - 1) * 10;
-          return { barLength, barKerf };
+          const usedMm = barLength + barKerf;
+          const waste = BAR - usedMm;
+
+          detailData.push(['Thanh ' + (barIndex + 1), '', '', '', '']);
+
+          pieces.forEach((piece) => {
+            const pieceName = piece.setName || 'N/A';
+            const pieceLength = piece.lengthMm || 0;
+            const pieceQty = piece.quantity || 1;
+            const pieceType = piece.originalAluminumCode ? aluminumNames[piece.originalAluminumCode] : 'N/A';
+
+            detailData.push(['', pieceName, pieceLength, pieceQty, pieceType]);
+          });
+
+          detailData.push(['', 'Thừa', waste, '', '']);
         });
-
-        const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
-        const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
-        const itemWeight = (weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000).toFixed(3);
-
-        detailData.push([
-          item.label,
-          item.totalBars,
-          totalLength,
-          totalKerf,
-          itemWeight
-        ]);
       });
 
-    // Create workbook
-    const ws = XLSX.utils.aoa_to_sheet([...summaryData, detailHeaders, ...detailData]);
+    // Create workbook with 2 sheets
+    const wb = XLSX.utils.book_new();
     
-    // Set column widths
-    ws['!cols'] = [
+    // Summary sheet
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary['!cols'] = [
+      { wch: 25 },
+      { wch: 25 }
+    ];
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Tóm tắt');
+
+    // Detail sheet
+    const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
+    wsDetail['!cols'] = [
+      { wch: 15 },
       { wch: 20 },
       { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 }
+      { wch: 12 },
+      { wch: 20 }
     ];
+    XLSX.utils.book_append_sheet(wb, wsDetail, 'Chi tiết');
 
-    // Add borders and styling using cell styles
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; R++) {
-      for (let C = range.s.c; C <= range.e.c; C++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!ws[cellAddress]) continue;
-        
-        // Style header rows
-        if (R < 11 || R === 11) {
-          ws[cellAddress].s = {
-            border: {
-              top: { style: 'thin' },
-              bottom: { style: 'thin' },
-              left: { style: 'thin' },
-              right: { style: 'thin' }
-            },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          };
-        } else {
-          ws[cellAddress].s = {
-            border: {
-              top: { style: 'thin' },
-              bottom: { style: 'thin' },
-              left: { style: 'thin' },
-              right: { style: 'thin' }
-            }
-          };
-        }
-      }
-    }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Báo giá');
     XLSX.writeFile(wb, `Bao-gia-${customer.name}-${Date.now()}.xlsx`);
   }
 
