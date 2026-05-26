@@ -431,6 +431,50 @@ var AppUI = (() => {
               margin: 4px 0;
             }
             
+            .section-title {
+              background: #FF8C00;
+              color: white;
+              padding: 8px;
+              font-weight: bold;
+              font-size: 12px;
+              margin: 15px 0 10px 0;
+              border-radius: 3px;
+            }
+            
+            .pricing-table {
+              width: 100%;
+              border-collapse: collapse;
+              border: 1px solid #bbb;
+              margin-bottom: 15px;
+            }
+            
+            .pricing-table thead {
+              background: #34495E;
+              color: white;
+            }
+            
+            .pricing-table th {
+              padding: 8px;
+              text-align: left;
+              font-size: 10px;
+              font-weight: bold;
+              border: 1px solid #999;
+            }
+            
+            .pricing-table td {
+              padding: 7px;
+              font-size: 9px;
+              border: 1px solid #ddd;
+            }
+            
+            .pricing-table tr:nth-child(even) {
+              background: #f9f9f9;
+            }
+            
+            .price-column {
+              text-align: right;
+            }
+            
             .aluminum-section {
               margin: 0 0 25px 0;
             }
@@ -531,7 +575,7 @@ var AppUI = (() => {
             </div>
           </div>
           
-          <div class="title">Optimized Cutting</div>
+          <div class="title">Bảng Giá Nhôm</div>
           
           <div class="info-box">
             <p><strong>Khách hàng:</strong> ${esc(customer.name)}</p>
@@ -607,8 +651,10 @@ var AppUI = (() => {
             const pieceLength = piece.lengthMm || 0;
             const piecePercent = (pieceLength / BAR) * 100;
             html += `
-              <div class="bar-piece" style="width: ${piecePercent.toFixed(1)}%; background: ${color}; opacity: 0.8;">
-                ${pieceName}
+              <div class="bar-piece" style="width: ${piecePercent.toFixed(1)}%; background: ${color}; opacity: 0.8; font-size: 10px;">
+                <div style="word-wrap: break-word; white-space: normal; padding: 2px;">
+                  <strong>${esc(pieceName)}</strong> - ${pieceLength}mm
+                </div>
               </div>
             `;
           });
@@ -616,16 +662,16 @@ var AppUI = (() => {
           if (info.waste > 0) {
             const wastePercent = (info.waste / BAR) * 100;
             html += `
-              <div class="bar-piece bar-waste" style="width: ${wastePercent.toFixed(1)}%; flex-shrink: 0;">
-                Thừa ${info.waste}mm
+              <div class="bar-piece bar-waste" style="width: ${wastePercent.toFixed(1)}%; flex-shrink: 0; font-size: 9px;">
+                Thừa - ${info.waste}mm
               </div>
             `;
           }
 
           html += `
                 </div>
-                <div style="font-size: 9px; color: #666; margin-top: 3px; text-align: right;">
-                  Sử dụng: ${info.usedMm}mm / Lãng phí: ${info.wastePercent}%
+                <div style="font-size: 10px; color: #333; margin-top: 5px;">
+                  <strong>Thanh ${idx + 1}:</strong> ${info.barLength}mm + ${info.barKerf}mm kerf = ${info.usedMm}mm | Lãng phí: ${info.wastePercent}% (${info.waste}mm)
                 </div>
               </td>
             </tr>
@@ -640,6 +686,9 @@ var AppUI = (() => {
       });
 
     html += `
+          <div style="page-break-before: avoid; margin-top: 30px;">
+            <div class="section-title">TỔNG KẾT TỐI ƯU HÓA</div>
+          </div>
           <div class="summary-box">
             <div class="summary-row">
               <span>Tổng số thanh:</span>
@@ -650,7 +699,7 @@ var AppUI = (() => {
               <span>${totalWeight.toFixed(3)} kg</span>
             </div>
             <div class="summary-row">
-              <span>Tổng giá tiền:</span>
+              <span>Tổng giá (nhôm):</span>
               <span>${formatted(totalCost)}</span>
             </div>
           </div>
