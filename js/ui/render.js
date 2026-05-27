@@ -82,7 +82,7 @@ var AppUI = (() => {
               bar.pieces.forEach(piece => {
                 const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
-                totalWeight += pieceWeight * piece.lengthMm / 1000; // Tính theo mm, không theo thanh
+                totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
             }
           });
@@ -118,7 +118,7 @@ var AppUI = (() => {
             bar.pieces.forEach(piece => {
               const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
               const pieceWeight = weight[origCode] || 0;
-              totalWeight += pieceWeight * piece.lengthMm / 1000; // Tính theo mm
+              totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
             });
           }
         });
@@ -371,7 +371,7 @@ var AppUI = (() => {
               bar.pieces.forEach(piece => {
                 const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
-                totalWeight += pieceWeight * piece.lengthMm / 1000;
+                totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
             }
           });
@@ -646,7 +646,7 @@ var AppUI = (() => {
               bar.pieces.forEach(piece => {
                 const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
-                itemWeight += pieceWeight * piece.lengthMm / 1000;
+                itemWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
             }
           });
@@ -807,7 +807,7 @@ var AppUI = (() => {
               bar.pieces.forEach(piece => {
                 const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
-                totalWeight += pieceWeight * piece.lengthMm / 1000;
+                totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
             }
           });
