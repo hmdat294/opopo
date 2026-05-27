@@ -1,25 +1,26 @@
 const AluminumService = (() => {
     let aluminumTypes = [];
     
-    // Detect environment
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const API_URL = isLocalhost ? '/db.json' : '/api/aluminumTypes';
+    // JSONBin endpoint
+    const API_URL = 'https://api.jsonbin.io/v3/b/6a0fd8eaee5a733b12fd2029';
+    const API_KEY = '$2a$10$UYIF4qD14K7VjKd.t7YRduvRNGS2JVp4OHtjxfTJi8Un9/o3cn7wO';
 
     async function loadAluminumTypes() {
         try {
             const response = await fetch(API_URL, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
                 }
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            let data = await response.json();
+            let responseData = await response.json();
             
-            // Handle both /api format (array) and /db.json format (object)
-            if (data.aluminumTypes) {
-                aluminumTypes = data.aluminumTypes;
-            } else if (Array.isArray(data)) {
+            // Extract data from JSONBin response (data is in 'record' property)
+            let data = responseData.record || [];
+            
+            if (Array.isArray(data)) {
                 aluminumTypes = data;
             } else {
                 aluminumTypes = [];
@@ -53,17 +54,14 @@ const AluminumService = (() => {
         try {
             aluminumTypes.push(newAluminum);
             
-            // Determine what to send based on endpoint
-            const payload = isLocalhost 
-                ? { aluminumTypes }
-                : { aluminumTypes };
-            
+            // Send updated array to JSONBin
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(aluminumTypes)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return newAluminum;
@@ -87,16 +85,15 @@ const AluminumService = (() => {
         
         try {
             Object.assign(aluminum, updated);
-            const payload = isLocalhost 
-                ? { aluminumTypes }
-                : { aluminumTypes };
             
+            // Update entire array in JSONBin
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(aluminumTypes)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return updated;
@@ -112,16 +109,15 @@ const AluminumService = (() => {
         
         try {
             aluminumTypes.splice(index, 1);
-            const payload = isLocalhost 
-                ? { aluminumTypes }
-                : { aluminumTypes };
             
+            // Update array in JSONBin after deletion
             const response = await fetch(API_URL, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(aluminumTypes)
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return true;
