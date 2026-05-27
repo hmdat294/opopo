@@ -17,8 +17,8 @@ const AluminumService = (() => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             let responseData = await response.json();
             
-            // Extract data from JSONBin response (data is in 'record' property)
-            let data = responseData.record || [];
+            // Extract data from JSONBin response (data is in 'record.aluminumTypes' property)
+            let data = responseData.record?.aluminumTypes || [];
             
             if (Array.isArray(data)) {
                 aluminumTypes = data;
@@ -61,7 +61,7 @@ const AluminumService = (() => {
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(aluminumTypes)
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return newAluminum;
@@ -93,7 +93,7 @@ const AluminumService = (() => {
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(aluminumTypes)
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return updated;
@@ -117,7 +117,7 @@ const AluminumService = (() => {
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify(aluminumTypes)
+                body: JSON.stringify({ aluminumTypes })
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return true;
