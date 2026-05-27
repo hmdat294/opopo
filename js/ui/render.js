@@ -70,17 +70,27 @@ var AppUI = (() => {
     }
 
     const calcWeight = (type, m) => {
-      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
+      // Kiểm tra xem có phải là bead (chứa '_bead_' trong sourceType)
+      const isBead = type && typeof type === 'string' && type.includes('_bead_');
 
-      // Nếu là beads, tính dựa trên originalAluminumCode
-      if (baseCode === 'beads' && m.bars && m.bars[0]) {
-        const firstPiece = m.bars[0]?.pieces?.[0];
-        if (firstPiece?.originalAluminumCode) {
-          const origCode = firstPiece.originalAluminumCode;
-          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
+      if (isBead || type === 'nẹp') {
+        // Tính cân nặng từng piece riêng lẻ vì beads có thể chứa nhiều loại nhôm
+        let totalWeight = 0;
+        if (m.bars && Array.isArray(m.bars)) {
+          m.bars.forEach(bar => {
+            if (bar.pieces && Array.isArray(bar.pieces)) {
+              bar.pieces.forEach(piece => {
+                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const pieceWeight = weight[origCode] || 0;
+                totalWeight += pieceWeight * piece.lengthMm / 1000; // Tính theo mm, không theo thanh
+              });
+            }
+          });
         }
+        return totalWeight;
       }
 
+      const baseCode = getBaseCode(type);
       return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
     };
 
@@ -98,15 +108,24 @@ var AppUI = (() => {
 
     const mk = (name, code, m, c) => {
       // Handle weight calculation
-      let weight_per_meter = 0;
-      if (code === 'nẹp' && m.bars && m.bars[0]) {
-        const firstPiece = m.bars[0]?.pieces?.[0];
-        if (firstPiece?.originalAluminumCode) {
-          weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
-        }
+      let totalWeight = 0;
+      const isBead = code === 'nẹp';
+
+      if (isBead && m.bars && Array.isArray(m.bars)) {
+        // Tính cân nặng từng piece riêng lẻ vì beads có thể chứa nhiều loại nhôm
+        m.bars.forEach(bar => {
+          if (bar.pieces && Array.isArray(bar.pieces)) {
+            bar.pieces.forEach(piece => {
+              const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+              const pieceWeight = weight[origCode] || 0;
+              totalWeight += pieceWeight * piece.lengthMm / 1000; // Tính theo mm
+            });
+          }
+        });
       } else {
         const baseCode = getBaseCode(code);
-        weight_per_meter = weight[baseCode] || 0;
+        const weight_per_meter = weight[baseCode] || 0;
+        totalWeight = weight_per_meter * BAR_LENGTH_MM * m.totalBars / 1000000;
       }
 
       // Tính tổng length cho mỗi bar riêng biệt
@@ -124,13 +143,13 @@ var AppUI = (() => {
 
       const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
       const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
-      const totalWeight = (weight_per_meter * BAR_LENGTH_MM * m.totalBars / 1000000).toFixed(3);
+      const totalWeightFixed = totalWeight.toFixed(3);
 
       return m.totalBars == 0 ? `` : `
         <div class="rounded border p-2">
           <div class="flex justify-between">
             <p class="font-normal">
-              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${totalWeight}kg
+              ${m.totalBars} ${name} | ${totalLength}mm + ${totalKerf}mm | ${totalWeightFixed}kg
             </p>
           </div>
           ${barsInfo.map((info, idx) => `
@@ -335,27 +354,33 @@ var AppUI = (() => {
       return parts[0];
     }
 
-    const calcWeight = (type, m) => {
-      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
-      if (baseCode === 'beads' && m.bars && m.bars[0]) {
-        const firstPiece = m.bars[0]?.pieces?.[0];
-        if (firstPiece?.originalAluminumCode) {
-          const origCode = firstPiece.originalAluminumCode;
-          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
-        }
-      }
-      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
-    };
-
-    const totalWeight = Object.values(r)
+    // Tính tổng weight cho PDF - xử lý beads với nhiều loại nhôm
+    let totalWeight = 0;
+    Object.values(r)
       .filter(item => item && item.bars && Array.isArray(item.bars))
-      .reduce((sum, item) => {
+      .forEach(item => {
         const firstPiece = item.bars[0]?.pieces?.[0];
-        if (firstPiece) {
-          return sum + calcWeight(firstPiece.sourceType, item);
+        if (!firstPiece) return;
+        
+        const isBeads = item.bars[0]?.pieces?.some(p => p.sourceType?.includes('_bead_'));
+        
+        if (isBeads) {
+          // Tính weight từng piece cho beads
+          item.bars.forEach(bar => {
+            if (bar.pieces && Array.isArray(bar.pieces)) {
+              bar.pieces.forEach(piece => {
+                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const pieceWeight = weight[origCode] || 0;
+                totalWeight += pieceWeight * piece.lengthMm / 1000;
+              });
+            }
+          });
+        } else {
+          const baseCode = getBaseCode(firstPiece.sourceType);
+          const itemWeight = (weight[baseCode] || 0) * BAR_LENGTH_MM * item.totalBars / 1000000;
+          totalWeight += itemWeight;
         }
-        return sum;
-      }, 0);
+      });
 
     const totalCost = (totalWeight.toFixed(3) * unit_price).toFixed(0);
 
@@ -599,17 +624,6 @@ var AppUI = (() => {
         const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
         const aluminumName = isBeads ? 'Nẹp' : aluminumNames[getBaseCode(sourceType)] || sourceType;
 
-        let weight_per_meter = 0;
-        if (isBeads && item.bars && item.bars[0]) {
-          const firstPiece = item.bars[0]?.pieces?.[0];
-          if (firstPiece?.originalAluminumCode) {
-            weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
-          }
-        } else {
-          const baseCode = getBaseCode(sourceType);
-          weight_per_meter = weight[baseCode] || 0;
-        }
-
         const barsInfo = item.bars.map((bar, barIdx) => {
           const pieces = bar.pieces || [];
           const barLength = pieces.reduce((sum, p) => sum + Number(p.lengthMm || 0), 0);
@@ -623,7 +637,25 @@ var AppUI = (() => {
 
         const totalLength = barsInfo.reduce((sum, info) => sum + info.barLength, 0);
         const totalKerf = barsInfo.reduce((sum, info) => sum + info.barKerf, 0);
-        const itemWeight = (weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000).toFixed(3);
+        
+        // Tính cân nặng từng piece riêng lẻ cho beads
+        let itemWeight = 0;
+        if (isBeads) {
+          item.bars.forEach(bar => {
+            if (bar.pieces && Array.isArray(bar.pieces)) {
+              bar.pieces.forEach(piece => {
+                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const pieceWeight = weight[origCode] || 0;
+                itemWeight += pieceWeight * piece.lengthMm / 1000;
+              });
+            }
+          });
+        } else {
+          const baseCode = getBaseCode(sourceType);
+          const weight_per_meter = weight[baseCode] || 0;
+          itemWeight = weight_per_meter * BAR_LENGTH_MM * item.totalBars / 1000000;
+        }
+        itemWeight = itemWeight.toFixed(3);
         const wastePercent = (((BAR * item.totalBars - totalLength - totalKerf) / (BAR * item.totalBars)) * 100).toFixed(1);
 
         const color = colorPalette[colorIndex % colorPalette.length];
@@ -758,27 +790,33 @@ var AppUI = (() => {
       return parts[0];
     }
 
-    const calcWeight = (type, m) => {
-      const baseCode = type === 'nẹp' ? 'beads' : getBaseCode(type);
-      if (baseCode === 'beads' && m.bars && m.bars[0]) {
-        const firstPiece = m.bars[0]?.pieces?.[0];
-        if (firstPiece?.originalAluminumCode) {
-          const origCode = firstPiece.originalAluminumCode;
-          return (weight[origCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
-        }
-      }
-      return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
-    };
-
-    const totalWeight = Object.values(r)
+    // Tính tổng weight cho Excel - xử lý beads với nhiều loại nhôm
+    let totalWeight = 0;
+    Object.values(r)
       .filter(item => item && item.bars && Array.isArray(item.bars))
-      .reduce((sum, item) => {
+      .forEach(item => {
         const firstPiece = item.bars[0]?.pieces?.[0];
-        if (firstPiece) {
-          return sum + calcWeight(firstPiece.sourceType, item);
+        if (!firstPiece) return;
+        
+        const isBeads = item.bars[0]?.pieces?.some(p => p.sourceType?.includes('_bead_'));
+        
+        if (isBeads) {
+          // Tính weight từng piece cho beads
+          item.bars.forEach(bar => {
+            if (bar.pieces && Array.isArray(bar.pieces)) {
+              bar.pieces.forEach(piece => {
+                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const pieceWeight = weight[origCode] || 0;
+                totalWeight += pieceWeight * piece.lengthMm / 1000;
+              });
+            }
+          });
+        } else {
+          const baseCode = getBaseCode(firstPiece.sourceType);
+          const itemWeight = (weight[baseCode] || 0) * BAR_LENGTH_MM * item.totalBars / 1000000;
+          totalWeight += itemWeight;
         }
-        return sum;
-      }, 0);
+      });
 
     const totalCost = (totalWeight.toFixed(3) * unit_price).toFixed(0);
 
@@ -807,17 +845,6 @@ var AppUI = (() => {
         const isBeads = key === 'beads';
         const sourceType = isBeads ? 'nẹp' : item.bars[0]?.pieces?.[0]?.sourceType;
         const aluminumName = isBeads ? 'Nẹp' : aluminumNames[getBaseCode(sourceType)] || sourceType;
-
-        let weight_per_meter = 0;
-        if (isBeads && item.bars && item.bars[0]) {
-          const firstPiece = item.bars[0]?.pieces?.[0];
-          if (firstPiece?.originalAluminumCode) {
-            weight_per_meter = weight[firstPiece.originalAluminumCode] || 0;
-          }
-        } else {
-          const baseCode = getBaseCode(sourceType);
-          weight_per_meter = weight[baseCode] || 0;
-        }
 
         detailData.push([]);
         detailData.push([aluminumName + ' - ' + item.label]);

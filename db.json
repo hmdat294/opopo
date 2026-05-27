@@ -1,32 +1,46 @@
 {
   "aluminumTypes": [
     {
+      "id": "alum_1779679200378_23907",
+      "name": "thanh truyền khóa C459",
+      "code": "C459",
+      "weightPerMeter": 139,
+      "profileCount": 0
+    },
+    {
+      "id": "alum_1779437352611_73947",
+      "name": "cánh cửa đi ngang dưới C6614",
+      "code": "C6614",
+      "weightPerMeter": 2014,
+      "profileCount": 2
+    },
+    {
       "id": "alum_1",
-      "name": "vách C3209",
+      "name": "vách kính C3209",
       "code": "C3209",
       "weightPerMeter": 802,
       "profileCount": 1
     },
     {
       "id": "alum_2",
-      "name": "đố C3203",
+      "name": "đố uốn vòm C3203",
       "code": "C3203",
       "weightPerMeter": 950,
       "profileCount": 2
     },
     {
       "id": "alum_3",
-      "name": "nẹp C3295",
+      "name": "nẹp kính C3295",
       "code": "C3295",
       "weightPerMeter": 271,
-      "profileCount": 1
+      "profileCount": 0
     },
     {
       "id": "alum_4",
       "name": "khung cửa đi C3328",
       "code": "C3328",
       "weightPerMeter": 1257,
-      "profileCount": 1
+      "profileCount": 0
     },
     {
       "id": "alum_5",
@@ -40,7 +54,7 @@
       "name": "khung cửa sổ C3318",
       "code": "C3318",
       "weightPerMeter": 876,
-      "profileCount": 1
+      "profileCount": 0
     },
     {
       "id": "alum_7",
@@ -51,11 +65,24 @@
     },
     {
       "id": "sXREFjS2dKs",
-      "name": "cánh cửa sổ mở quay (không gân)",
+      "name": "cánh cửa sổ mở quay C70812",
       "code": "C70812",
       "weightPerMeter": 1053,
       "profileCount": 1
+    },
+    {
+      "id": "alum_1779424803805_17431",
+      "name": "đố động C22903",
+      "code": "C22903",
+      "weightPerMeter": 891,
+      "profileCount": 0
+    },
+    {
+      "id": "alum_1779679168009_23118",
+      "name": "nối khung C3300",
+      "code": "C3300",
+      "weightPerMeter": 3347,
+      "profileCount": 0
     }
-  ],
-  "$schema": "./node_modules/json-server/schema.json"
+  ]
 }
