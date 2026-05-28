@@ -80,7 +80,7 @@ var AppUI = (() => {
           m.bars.forEach(bar => {
             if (bar.pieces && Array.isArray(bar.pieces)) {
               bar.pieces.forEach(piece => {
-                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
                 totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
@@ -101,7 +101,24 @@ var AppUI = (() => {
         // Tìm code từ pieces
         const firstPiece = item.bars[0]?.pieces?.[0];
         if (firstPiece) {
-          return sum + calcWeight(firstPiece.sourceType, item);
+          let weight_val = 0;
+          const isBeads = firstPiece.beadAluminumCode || firstPiece.sourceType?.includes('_bead_');
+          
+          if (isBeads) {
+            item.bars.forEach(bar => {
+              if (bar.pieces && Array.isArray(bar.pieces)) {
+                bar.pieces.forEach(piece => {
+                  const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                  const pieceWeight = weight[origCode] || 0;
+                  weight_val += pieceWeight * piece.lengthMm / 1000000;
+                });
+              }
+            });
+          } else {
+            const baseCode = getBaseCode(firstPiece.sourceType);
+            weight_val = (weight[baseCode] || 0) * BAR_LENGTH_MM * item.totalBars / 1000000;
+          }
+          return sum + weight_val;
         }
         return sum;
       }, 0);
@@ -116,7 +133,7 @@ var AppUI = (() => {
         m.bars.forEach(bar => {
           if (bar.pieces && Array.isArray(bar.pieces)) {
             bar.pieces.forEach(piece => {
-              const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+              const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
               const pieceWeight = weight[origCode] || 0;
               totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
             });
@@ -362,14 +379,14 @@ var AppUI = (() => {
         const firstPiece = item.bars[0]?.pieces?.[0];
         if (!firstPiece) return;
         
-        const isBeads = item.bars[0]?.pieces?.some(p => p.sourceType?.includes('_bead_'));
+        const isBeads = firstPiece.beadAluminumCode || firstPiece.sourceType?.includes('_bead_');
         
         if (isBeads) {
           // Tính weight từng piece cho beads
           item.bars.forEach(bar => {
             if (bar.pieces && Array.isArray(bar.pieces)) {
               bar.pieces.forEach(piece => {
-                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
                 totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
@@ -644,7 +661,7 @@ var AppUI = (() => {
           item.bars.forEach(bar => {
             if (bar.pieces && Array.isArray(bar.pieces)) {
               bar.pieces.forEach(piece => {
-                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
                 itemWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
@@ -798,14 +815,14 @@ var AppUI = (() => {
         const firstPiece = item.bars[0]?.pieces?.[0];
         if (!firstPiece) return;
         
-        const isBeads = item.bars[0]?.pieces?.some(p => p.sourceType?.includes('_bead_'));
+        const isBeads = firstPiece.beadAluminumCode || firstPiece.sourceType?.includes('_bead_');
         
         if (isBeads) {
           // Tính weight từng piece cho beads
           item.bars.forEach(bar => {
             if (bar.pieces && Array.isArray(bar.pieces)) {
               bar.pieces.forEach(piece => {
-                const origCode = piece.originalAluminumCode || getBaseCode(piece.sourceType);
+                const origCode = piece.beadAluminumCode || piece.originalAluminumCode || getBaseCode(piece.sourceType);
                 const pieceWeight = weight[origCode] || 0;
                 totalWeight += pieceWeight * piece.lengthMm / 1000000; // g/m * mm / 1000000 = kg
               });
@@ -863,7 +880,8 @@ var AppUI = (() => {
             const pieceName = piece.setName || 'N/A';
             const pieceLength = piece.lengthMm || 0;
             const pieceQty = piece.quantity || 1;
-            const pieceType = piece.originalAluminumCode ? aluminumNames[piece.originalAluminumCode] : 'N/A';
+            const origCode = piece.beadAluminumCode || piece.originalAluminumCode;
+            const pieceType = origCode ? aluminumNames[origCode] : 'N/A';
 
             detailData.push(['', pieceName, pieceLength, pieceQty, pieceType]);
           });
