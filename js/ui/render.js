@@ -94,27 +94,11 @@ var AppUI = (() => {
     //   return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
     // };
 
-    const BEAD_CODE = 'C3295'; // Mã nẹp duy nhất
+    const BEAD_CODE = 'C3295';
 
     const calcWeight = (type, m) => {
       const isBead = type === 'nẹp' || (type && typeof type === 'string' && type.includes('_bead_'));
-
-      if (isBead) {
-        // Nẹp luôn dùng C3295, tính theo từng piece
-        let totalWeight = 0;
-        if (m.bars && Array.isArray(m.bars)) {
-          m.bars.forEach(bar => {
-            if (bar.pieces && Array.isArray(bar.pieces)) {
-              bar.pieces.forEach(piece => {
-                totalWeight += (weight[BEAD_CODE] || 0) * piece.lengthMm / 1000000;
-              });
-            }
-          });
-        }
-        return totalWeight;
-      }
-
-      const baseCode = getBaseCode(type);
+      const baseCode = isBead ? BEAD_CODE : getBaseCode(type);
       return (weight[baseCode] || 0) * BAR_LENGTH_MM * (m?.totalBars || 0) / 1000000;
     };
 
@@ -155,20 +139,7 @@ var AppUI = (() => {
         if (!firstPiece) return sum;
 
         const isBead = firstPiece.beadAluminumCode || firstPiece.sourceType?.includes('_bead_');
-
-        if (isBead) {
-          // Nẹp: luôn dùng BEAD_CODE, tính từng piece
-          let w = 0;
-          item.bars.forEach(bar => {
-            (bar.pieces || []).forEach(piece => {
-              w += (weight[BEAD_CODE] || 0) * piece.lengthMm / 1000000;
-            });
-          });
-          return sum + w;
-        }
-
-        // Nhôm thường: tính theo thanh
-        const baseCode = getBaseCode(firstPiece.sourceType);
+        const baseCode = isBead ? BEAD_CODE : getBaseCode(firstPiece.sourceType);
         return sum + (weight[baseCode] || 0) * BAR_LENGTH_MM * item.totalBars / 1000000;
       }, 0);
 
@@ -196,19 +167,10 @@ var AppUI = (() => {
     //   }
 
     const mk = (name, code, m, c) => {
+      // Thay toàn bộ block tính weight trong mk:
       const isBead = code === 'nẹp' || (code && typeof code === 'string' && code.includes('_bead_'));
-      let totalWeight = 0;
-      if (isBead) {
-        // Nẹp: luôn dùng BEAD_CODE
-        (m.bars || []).forEach(bar => {
-          (bar.pieces || []).forEach(piece => {
-            totalWeight += (weight[BEAD_CODE] || 0) * piece.lengthMm / 1000000;
-          });
-        });
-      } else {
-        const baseCode = getBaseCode(code);
-        totalWeight = (weight[baseCode] || 0) * BAR_LENGTH_MM * m.totalBars / 1000000;
-      }
+      const baseCode = isBead ? BEAD_CODE : getBaseCode(code);
+      const totalWeight = (weight[baseCode] || 0) * BAR_LENGTH_MM * m.totalBars / 1000000;
 
       // Tính tổng length cho mỗi bar riêng biệt
       const barsInfo = m.bars.map((b) => {
