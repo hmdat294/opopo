@@ -94,6 +94,7 @@ const OptimizationService = (() => {
                             setName: set.name,
                             sourceType: beadCode,
                             originalAluminumCode: aluminumCode,
+                            beadAluminumCode: 'C3295',
                             lengthMm,
                             usedMm: lengthMm + EFFECTIVE_KERF_MM
                         });
