@@ -23,23 +23,29 @@
 
             <div class="flex gap-3 items-center">
                 <!-- Settings Modal Button -->
-                <button id="settingsBtn" class="rounded bg-slate-500 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" title="Cài đặt">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="size-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94m-.213 9.526c.027.20.055.406.084.592.176 1.307-.298 2.453-.952 3.285-.656.832-1.629 1.33-2.652 1.33-.344 0-.677-.074-.979-.214-.299.165-.631.25-.979.25-.35 0-.68-.085-.979-.25-.302.14-.635.214-.979.214-1.023 0-1.996-.498-2.652-1.33-.654-.832-1.128-1.978-.952-3.285.03-.186.057-.392.084-.592m0 0A5.64 5.64 0 0 1 9.432 3H9.456c.596 0 1.18.098 1.734.292m0 0A5.58 5.58 0 0 0 9.456 3h-.024c-.636 0-1.258.097-1.855.288m0 0a5.606 5.606 0 0 1 1.855-.288zm0 0A5.589 5.589 0 0 1 13.5 5.106a5.589 5.589 0 0 1 5.861 5.588M20.21 7.04c.307.465.405 1.02.285 1.55-.12.53-.456 1.025-.93 1.32m0 0a5.592 5.592 0 0 1-9.668 0m12.576-4.986a5.552 5.552 0 0 1-3.355 1.973m-.694-9.062a5.56 5.56 0 0 1 4.332 1.39c.821.9 1.444 2.025 1.684 3.22m0 0a5.592 5.592 0 0 1-7.201 8.264m0 0a5.555 5.555 0 0 1-1.579-3.718m0 0a5.59 5.59 0 0 1 5.201-5.805" />
+                <button id="settingsBtn"
+                    class="rounded bg-slate-500 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                    title="Cài đặt">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                        stroke="currentColor" className="size-6">
+                        <path strokeLinecap="round" strokeLinejoin="round"
+                            d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                     </svg>
                 </button>
-                <div style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-3 shadow-sm">
+                <div style="background-color: rgb(51, 65, 85, 0.5);"
+                    class="rounded border border-slate-500 p-3 shadow-sm">
                     <div class="flex flex-wrap items-center gap-2">
                         <input id="customerNameInput" type="text" placeholder="Tên khách hàng"
                             class="w-full min-w-[200px] flex-1 rounded border border-slate-500 bg-slate-800 text-slate-300 px-3 py-1 placeholder:text-slate-400 focus:border-blue-500">
-                        <button id="addCustomerBtn" class="rounded bg-blue-500 px-3 py-1 text-sm font-medium text-white" title="Thêm khách hàng">
+                        <button id="addCustomerBtn" class="rounded bg-blue-500 px-3 py-1 text-sm font-medium text-white"
+                            title="Thêm khách hàng">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
                         </button>
-                        <button id="resetAllBtn" class="rounded bg-red-500 px-3 py-1 text-sm font-medium text-white" title="Xóa toàn bộ">
+                        <button id="resetAllBtn" class="rounded bg-red-500 px-3 py-1 text-sm font-medium text-white"
+                            title="Xóa toàn bộ">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -57,11 +63,14 @@
                 <h2 class="text-xl font-bold mb-4 text-slate-100">Cài đặt</h2>
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-2 text-slate-100">Đơn giá mặc định (VND/kg)</label>
-                    <input id="unitPriceInput" type="number" min="0" class="w-full rounded border border-slate-300 px-3 py-2 bg-slate-600 text-slate-100 placeholder:text-slate-400 focus:border-blue-500 outline-none">
+                    <input id="unitPriceInput" type="number" min="0"
+                        class="w-full rounded border border-slate-300 px-3 py-2 bg-slate-600 text-slate-100 placeholder:text-slate-400 focus:border-blue-500 outline-none">
                 </div>
                 <div class="flex gap-2 justify-end">
-                    <button id="settingsCancelBtn" class="rounded bg-slate-500 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-600">Hủy</button>
-                    <button id="settingsSaveBtn" class="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white">Lưu</button>
+                    <button id="settingsCancelBtn"
+                        class="rounded bg-slate-500 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-600">Hủy</button>
+                    <button id="settingsSaveBtn"
+                        class="rounded bg-blue-500 px-4 py-2 text-sm font-medium text-white">Lưu</button>
                 </div>
             </div>
         </div>
