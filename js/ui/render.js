@@ -128,7 +128,7 @@ var AppUI = (() => {
                   </div>
                 `).join("")}
                 ${info.waste > 0 ? `
-                  <div class="flex items-center justify-center border-r border-slate-500 px-1 text-xs bg-slate-700 text-slate-100"
+                  <div class="flex items-center justify-center border-r border-slate-500 px-1 text-xs bg-slate-800 text-slate-100"
                        style="width:${(info.waste / BAR) * 100}%">
                     Thừa ${info.waste}mm
                   </div>

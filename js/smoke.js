@@ -25,51 +25,19 @@
         mouse.speed = Math.hypot(mouse.x - mouse.prevX, mouse.y - mouse.prevY);
         mouseOnScreen = true;
     });
-    document.addEventListener('mouseleave', () => {
-        mouseOnScreen = false;
-    });
-    document.addEventListener('mouseenter', () => {
-        mouseOnScreen = true;
-    });
+    document.addEventListener('mouseleave', () => mouseOnScreen = false);
+    document.addEventListener('mouseenter', () => mouseOnScreen = true);
     // ========== Configuration ==========
     const config = {
         baseSize: 40,
         intensity: 3,
-        colorScheme: 'white',
+        colorScheme: 'custom',
     };
     // Color palettes
     const colorSchemes = {
-        white: {
-            getColor: (alpha) => `rgba(200, 200, 210, ${alpha})`,
-            glow: 'rgba(255, 255, 255, 0.03)',
-        },
-        blue: {
-            getColor: (alpha) => {
-                const hue = 195 + Math.random() * 20;
-                return `hsla(${hue}, 85%, 65%, ${alpha})`;
-            },
-            glow: 'rgba(79, 172, 254, 0.05)',
-        },
-        purple: {
-            getColor: (alpha) => {
-                const hue = 270 + Math.random() * 40;
-                return `hsla(${hue}, 70%, 60%, ${alpha})`;
-            },
-            glow: 'rgba(168, 85, 247, 0.05)',
-        },
-        fire: {
-            getColor: (alpha) => {
-                const hue = 10 + Math.random() * 30;
-                return `hsla(${hue}, 90%, 55%, ${alpha})`;
-            },
-            glow: 'rgba(249, 115, 22, 0.05)',
-        },
-        green: {
-            getColor: (alpha) => {
-                const hue = 140 + Math.random() * 40;
-                return `hsla(${hue}, 70%, 50%, ${alpha})`;
-            },
-            glow: 'rgba(34, 197, 94, 0.05)',
+        custom: {
+            getColor: (alpha) => `hsla(${(Date.now() / 20) % 360}, 100%, 50%, ${alpha})`,
+            glow: 'rgba(0, 0, 0, 0)',
         },
     };
     // ========== Smoke Particle Class ==========
@@ -200,45 +168,4 @@
     // Initial full clear
     ctx.clearRect(0, 0, width, height);
     render();
-    // // ========== UI Controls ==========
-    // const controlsEl = document.getElementById('controls');
-    // const toggleBtn = document.getElementById('toggleControls');
-    // const sizeSlider = document.getElementById('smokeSize');
-    // const sizeValue = document.getElementById('sizeValue');
-    // const intensitySlider = document.getElementById('smokeIntensity');
-    // const intensityValue = document.getElementById('intensityValue');
-    // const colorBtns = document.querySelectorAll('.color-btn');
-    // toggleBtn.addEventListener('click', () => {
-    //     controlsEl.classList.toggle('hidden');
-    // });
-    // sizeSlider.addEventListener('input', (e) => {
-    //     config.baseSize = parseInt(e.target.value);
-    //     sizeValue.textContent = e.target.value;
-    // });
-    // intensitySlider.addEventListener('input', (e) => {
-    //     config.intensity = parseInt(e.target.value);
-    //     intensityValue.textContent = e.target.value;
-    // });
-    // colorBtns.forEach((btn) => {
-    //     btn.addEventListener('click', () => {
-    //         colorBtns.forEach((b) => b.classList.remove('active'));
-    //         btn.classList.add('active');
-    //         config.colorScheme = btn.dataset.color;
-    //     });
-    // });
-    // // ========== Title Fade Out on Interaction ==========
-    // let titleFaded = false;
-    // const titleEl = document.querySelector('.title');
-    // const subtitleEl = document.querySelector('.subtitle');
-    // document.addEventListener('mousemove', () => {
-    //     if (!titleFaded) {
-    //         titleFaded = true;
-    //         setTimeout(() => {
-    //             titleEl.style.transition = 'opacity 2s ease';
-    //             subtitleEl.style.transition = 'opacity 2s ease';
-    //             titleEl.style.opacity = '0.08';
-    //             subtitleEl.style.opacity = '0.05';
-    //         }, 3000);
-    //     }
-    // });
 })();
