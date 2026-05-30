@@ -112,23 +112,23 @@ var AppUI = (() => {
       const totalWeightFixed = totalWeight.toFixed(3);
 
       return m.totalBars == 0 ? `` : `
-        <div class="rounded border p-2">
+        <div style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-2">
           <div class="flex justify-between">
-            <p class="font-normal">
+            <p class="font-normal text-slate-100">
               ${m.totalBars} ${name} | ${totalWeightFixed}kg
             </p>
           </div>
           ${barsInfo.map((info, idx) => `
             <div class="mt-2">
-              <div class="flex h-8 overflow-hidden rounded border">
+              <div class="flex h-8 overflow-hidden rounded border border-slate-500">
                 ${info.pieces.map((p) => `
-                  <div class="${c} flex items-center justify-center border-r px-1 text-md text-white text-center text-xs"
+                  <div class="${c} flex items-center justify-center border-r border-slate-500 px-1 text-md text-white text-center text-xs"
                        style="width:${(p.usedMm / BAR) * 100}%">
                     ${esc(p.setName)} - ${p.lengthMm}mm
                   </div>
                 `).join("")}
                 ${info.waste > 0 ? `
-                  <div class="flex items-center justify-center border-r px-1 text-xs bg-gray-300 text-gray-700"
+                  <div class="flex items-center justify-center border-r border-slate-500 px-1 text-xs bg-slate-700 text-slate-100"
                        style="width:${(info.waste / BAR) * 100}%">
                     Thừa ${info.waste}mm
                   </div>
@@ -140,7 +140,7 @@ var AppUI = (() => {
     };
 
     holder.innerHTML =
-      `<div class="mt-2 rounded border border-emerald-300 bg-emerald-50 p-2 text-md font-medium flex justify-between items-center">
+      `<div style="background-color: rgb(51, 65, 85, 0.5);" class="mt-2 rounded border border-slate-500 p-2 text-md font-medium flex justify-between items-center text-slate-100">
         <p>Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg | đơn giá ${formatted(unit_price)}/kg</p>
         <div class="flex gap-2">
           <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
@@ -169,12 +169,12 @@ var AppUI = (() => {
 
   function render() {
     const root = document.getElementById("customersContainer");
-    if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border bg-white p-3 text-center text-sm">Trống.</div>`);
+    if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border p-3 text-center text-sm text-slate-100">Trống.</div>`);
     root.innerHTML = appState.customers.map((c) => {
       const hasSeg = c.sets.some((s) => s.segments.some((g) => Number(g.lengthMm) > 0 && Number(g.quantity) > 0));
-      return `<div class="mb-4 rounded border bg-white p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
+      return `<div style="background-color: rgb(51, 65, 85, 0.5);" class="mb-4 rounded border border-slate-500 p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
         <div class="flex items-center justify-between">
-          <b class="cursor-pointer" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
+          <b class="cursor-pointer text-slate-100" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
           <div class="flex gap-2">
             ${hasSeg && !c.isCollapsed ?
           `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
@@ -202,7 +202,7 @@ var AppUI = (() => {
         <div id="optimization_${c.id}"></div>
         ${c.isCollapsed ? `` : `
           <div class="mt-2 flex gap-2">
-            <input id="setInput_${c.id}" class="flex-1 rounded border px-2 py-1" placeholder="Tên bộ">
+            <input id="setInput_${c.id}" class="flex-1 rounded border border-slate-500 border-slate-500 px-2 py-1 bg-slate-800 text-slate-100" placeholder="Tên bộ">
             <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSet('${c.id}')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="size-6">
@@ -212,9 +212,9 @@ var AppUI = (() => {
           </div>
           <div class="mt-2 space-y-2">
             ${c.sets.length === 0 ? `<p class="text-sm italic text-slate-500 text-center">Trống.</p>` : c.sets.map((s) => `
-            <div class="rounded border border-dashed bg-slate-50 p-2">
+            <div style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-2">
               <div class="mb-2 flex items-center justify-between">
-                <b>${esc(s.name)}</b>
+                <b class="text-slate-100">${esc(s.name)}</b>
                 <button class="rounded bg-red-500 px-2 py-1 text-xs text-white" onclick="deleteSet('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-6">
@@ -224,9 +224,9 @@ var AppUI = (() => {
                 </button>
               </div>
               <div class="flex gap-2">
-                <input id="segLength_${s.id}" type="number" min="1" max="${BAR_LENGTH_MM}" placeholder="Chiều dài (mm)" class="rounded border px-2 py-1 w-full">
-                <input id="segQty_${s.id}" type="number" min="1" value="1" class="rounded border px-2 py-1 w-1/6">
-                <select id="segType_${s.id}" class="rounded border px-2 py-1 w-1/2">
+                <input id="segLength_${s.id}" type="number" min="1" max="${BAR_LENGTH_MM}" placeholder="Chiều dài (mm)" class="rounded border border-slate-500 px-2 py-1 w-full bg-slate-800 text-slate-100">
+                <input id="segQty_${s.id}" type="number" min="1" value="1" class="rounded border border-slate-500 px-2 py-1 w-1/6 bg-slate-800 text-slate-100">
+                <select id="segType_${s.id}" class="rounded border border-slate-500 px-2 py-1 w-1/2 bg-slate-800 text-slate-100">
                   ${getAluminumSelectOptions()}
                 </select>
                 <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
@@ -238,7 +238,7 @@ var AppUI = (() => {
               </div>
               ${s.segments.length === 0 ? `<p class="mt-2 text-sm italic text-slate-500 text-center">Trống.</p>` : `
                 <div class="mt-2 overflow-x-auto">
-                  <table class="w-full text-sm">
+                  <table class="w-full text-sm text-slate-100">
                     <thead>
                       <tr>
                         <th class="w-8/12">Chiều dài</th>
@@ -254,13 +254,13 @@ var AppUI = (() => {
                             <input type="range" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}"
                               onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="w-full">
                             <input type="number" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}" 
-                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="rounded border px-2 py-1">
+                              onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="rounded border border-slate-500 px-2 py-1 bg-slate-800 text-slate-100">
                           </td>
                           <td class="px-2">
-                            <input type="number" min="1" value="${Number(g.quantity) || 0}" onchange="updateSegment('${c.id}','${s.id}','${g.id}','quantity',this.value)" class="w-full rounded border px-2 py-1">
+                            <input type="number" min="1" value="${Number(g.quantity) || 0}" onchange="updateSegment('${c.id}','${s.id}','${g.id}','quantity',this.value)" class="w-full rounded border border-slate-500 px-2 py-1 bg-slate-800 text-slate-100">
                           </td>
                           <td class="w-3/12 pr-2">
-                            <select onchange="updateSegment('${c.id}','${s.id}','${g.id}','segmentType',this.value)" class="rounded border px-2 py-1 w-full">
+                            <select onchange="updateSegment('${c.id}','${s.id}','${g.id}','segmentType',this.value)" class="rounded border border-slate-500 px-2 py-1 w-full bg-slate-800 text-slate-100">
                               ${getAluminumSelectOptions(g.segmentType)}
                             </select>
                           </td>
