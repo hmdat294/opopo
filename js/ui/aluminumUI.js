@@ -28,7 +28,7 @@ const AluminumUI = (() => {
                         ✏️
                     </button>
                     <button onclick="window.deleteAluminum('${esc(aluminum.id)}')" 
-                        class="rounded bg-red-500 px-3 py-1 text-sm font-medium text-white hover:bg-red-600" title="Xóa">
+                        class="rounded bg-pink-800 hover:bg-pink-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-600" title="Xóa">
                         🗑️
                     </button>
                 </div>

@@ -55,9 +55,9 @@ var AppUI = (() => {
 
     // Palette màu và cache
     const colorPalette = [
-      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+      "bg-red-500", "bg-teal-500", "bg-green-500", "bg-yellow-500",
       "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-cyan-500",
-      "bg-orange-500", "bg-teal-500", "bg-lime-500", "bg-sky-500"
+      "bg-orange-500", "bg-violet-500", "bg-lime-500", "bg-sky-500"
     ];
     const colorCache = {};
 
@@ -144,7 +144,7 @@ var AppUI = (() => {
         <p>Tổng ${r.totalBars} thanh | ${totalWeight.toFixed(3)}kg | đơn giá ${formatted(unit_price)}/kg</p>
         <div class="flex gap-2">
           <p>${formatted(totalWeight.toFixed(3) * unit_price)}</p>
-          <button class="rounded bg-blue-500 px-2 py-1 text-xs text-white" onclick="window.ExportUI.exportPDF('${customerId}')" title="Xuất PDF">
+          <button class="rounded bg-sky-800 hover:bg-sky-600 px-2 py-1 text-xs text-white" onclick="window.ExportUI.exportPDF('${customerId}')" title="Xuất PDF">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
@@ -172,15 +172,15 @@ var AppUI = (() => {
     if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border p-3 text-center text-sm text-slate-100">Trống.</div>`);
     root.innerHTML = appState.customers.map((c) => {
       const hasSeg = c.sets.some((s) => s.segments.some((g) => Number(g.lengthMm) > 0 && Number(g.quantity) > 0));
-      return `<div style="background-color: rgb(51, 65, 85, 0.5);" class="mb-4 rounded border border-slate-500 p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
+      return `<div style="background: linear-gradient(to right, rgba(51, 65, 85, 0.5), rgba(55, 85, 135, 0.5));" class="mb-4 rounded border border-slate-500 p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
         <div class="flex items-center justify-between">
           <b class="cursor-pointer text-slate-100" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
           <div class="flex gap-2">
             ${hasSeg && !c.isCollapsed ?
-          `<button class="rounded bg-blue-500 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
+          `<button class="rounded bg-fuchsia-800 hover:bg-fuchsia-600 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
               Tổng số thanh
             </button>` : ""}
-            <button class="rounded bg-emerald-500 px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
+            <button class="rounded bg-teal-800 hover:bg-teal-600 px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
               ${c.isCollapsed ?
           `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
@@ -190,7 +190,7 @@ var AppUI = (() => {
               </svg>`}
             </button>
             ${c.isCollapsed ? `` :
-          `<button class="rounded bg-red-500 px-2 py-1 text-sm text-white" onclick="deleteCustomer('${c.id}')">
+          `<button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-sm text-white" onclick="deleteCustomer('${c.id}')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="size-6">
                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -203,7 +203,7 @@ var AppUI = (() => {
         ${c.isCollapsed ? `` : `
           <div class="mt-2 flex gap-2">
             <input id="setInput_${c.id}" class="flex-1 rounded border border-slate-500 border-slate-500 px-2 py-1 bg-slate-800 text-slate-100" placeholder="Tên bộ">
-            <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSet('${c.id}')">
+            <button class="rounded bg-sky-800 hover:bg-sky-600 px-2 py-1 text-white" onclick="handleAddSet('${c.id}')">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="size-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -215,7 +215,7 @@ var AppUI = (() => {
             <div style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-2">
               <div class="mb-2 flex items-center justify-between">
                 <b class="text-slate-100">${esc(s.name)}</b>
-                <button class="rounded bg-red-500 px-2 py-1 text-xs text-white" onclick="deleteSet('${c.id}','${s.id}')">
+                <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="deleteSet('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-6">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -229,7 +229,7 @@ var AppUI = (() => {
                 <select id="segType_${s.id}" class="rounded border border-slate-500 px-2 py-1 w-1/2 bg-slate-800 text-slate-100">
                   ${getAluminumSelectOptions()}
                 </select>
-                <button class="rounded bg-blue-500 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
+                <button class="rounded bg-sky-800 hover:bg-sky-600 px-2 py-1 text-white" onclick="handleAddSegment('${c.id}','${s.id}')">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -265,7 +265,7 @@ var AppUI = (() => {
                             </select>
                           </td>
                           <td class="">
-                              <button class="rounded bg-red-500 px-2 py-1 text-xs text-white" onclick="deleteSegment('${c.id}','${s.id}','${g.id}')">
+                              <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="deleteSegment('${c.id}','${s.id}','${g.id}')">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                   stroke="currentColor" class="size-6">
                                   <path stroke-linecap="round" stroke-linejoin="round"

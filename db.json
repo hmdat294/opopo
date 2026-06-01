@@ -1,6 +1,20 @@
 {
   "aluminumTypes": [
     {
+      "id": "alum_1780026087423_22318",
+      "name": "đố trên khung C124623",
+      "code": "C124623",
+      "weightPerMeter": 1066,
+      "profileCount": 0
+    },
+    {
+      "id": "alum_1779853996519_1058",
+      "name": "ốp đáy cửa đi C22900",
+      "code": "C22900",
+      "weightPerMeter": 476,
+      "profileCount": 0
+    },
+    {
       "id": "alum_1779679200378_23907",
       "name": "thanh truyền khóa C459",
       "code": "C459",
@@ -44,7 +58,7 @@
     },
     {
       "id": "alum_5",
-      "name": "cánh cửa đi C3303",
+      "name": "cánh cửa đi mở ngoài C3303",
       "code": "C3303",
       "weightPerMeter": 1441,
       "profileCount": 1
@@ -82,6 +96,20 @@
       "name": "nối khung C3300",
       "code": "C3300",
       "weightPerMeter": 3347,
+      "profileCount": 0
+    },
+    {
+      "id": "alum_1780025350504_40704",
+      "name": "cánh cửa đi mở trong C3332",
+      "code": "C3332",
+      "weightPerMeter": 1442,
+      "profileCount": 1
+    },
+    {
+      "id": "alum_1780026263872_17135",
+      "name": "khung bao chuyển hướng C25899",
+      "code": "C25899",
+      "weightPerMeter": 727,
       "profileCount": 0
     }
   ]
