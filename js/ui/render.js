@@ -1,6 +1,11 @@
 var AppUI = (() => {
   const { appState, BAR_LENGTH_MM, findCustomer } = window.AppData;
   const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const colorPalette = [
+    "bg-red-500", "bg-teal-500", "bg-green-500", "bg-yellow-500",
+    "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-cyan-500",
+    "bg-orange-500", "bg-violet-500", "bg-lime-500", "bg-sky-500"
+  ];
 
   function getAluminumSelectOptions(selectedValue = "") {
     const aluminumTypes = window.AluminumService.getAluminumTypes();
@@ -53,12 +58,6 @@ var AppUI = (() => {
       return parts[0];
     }
 
-    // Palette màu và cache
-    const colorPalette = [
-      "bg-red-500", "bg-teal-500", "bg-green-500", "bg-yellow-500",
-      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-cyan-500",
-      "bg-orange-500", "bg-violet-500", "bg-lime-500", "bg-sky-500"
-    ];
     const colorCache = {};
 
     function getColorForCode(code) {
@@ -180,11 +179,11 @@ var AppUI = (() => {
           `<button class="rounded bg-fuchsia-800 hover:bg-fuchsia-600 px-2 py-1 text-sm text-white" onclick="renderOptimization('${c.id}')">
               Tổng số thanh
             </button>` : ""}
-            <button class="rounded bg-teal-800 hover:bg-teal-600 px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
+            <button class="rounded ${colorPalette[Math.floor(Math.random() * colorPalette.length)]} px-2 py-1 text-sm text-white" onclick="toggleCustomerCollapse('${c.id}')">
               ${c.isCollapsed ?
-          `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-                  </svg>`
+            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+              </svg>`
           : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
               </svg>`}
