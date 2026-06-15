@@ -1,5 +1,89 @@
 var AppUI = (() => {
   const { appState, BAR_LENGTH_MM, findCustomer } = window.AppData;
+
+  window.animateAndDelete = (id, callback) => {
+    const el = document.getElementById(id);
+    if (!el) return callback();
+    
+    const rect = el.getBoundingClientRect();
+    
+    // TẠO BÓNG MA (CLONE) ĐỂ ANIMATE: Giải quyết triệt để lỗi transform trên thẻ <tr>
+    const isRow = el.tagName.toLowerCase() === 'tr';
+    const clone = el.cloneNode(true);
+    clone.removeAttribute('id'); // Tránh trùng lặp ID
+    clone.style.position = 'fixed';
+    clone.style.margin = '0';
+    clone.style.zIndex = '9999';
+    clone.style.pointerEvents = 'none'; // Xuyên click
+    clone.style.transition = 'none';
+    
+    let animateTarget;
+    
+    if (isRow) {
+      animateTarget = document.createElement('table');
+      animateTarget.className = 'text-sm text-slate-100'; // Giữ nguyên style chữ
+      animateTarget.style.position = 'fixed';
+      animateTarget.style.left = rect.left + 'px';
+      animateTarget.style.top = rect.top + 'px';
+      animateTarget.style.width = rect.width + 'px';
+      animateTarget.style.borderCollapse = 'collapse';
+      animateTarget.style.zIndex = '9999';
+      animateTarget.style.pointerEvents = 'none';
+      
+      const tbody = document.createElement('tbody');
+      
+      // Giữ nguyên độ rộng cột
+      const originalTds = el.children;
+      const cloneTds = clone.children;
+      for (let i = 0; i < originalTds.length; i++) {
+        cloneTds[i].style.width = originalTds[i].getBoundingClientRect().width + 'px';
+      }
+      
+      tbody.appendChild(clone);
+      animateTarget.appendChild(tbody);
+      document.body.appendChild(animateTarget);
+    } else {
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+      clone.style.width = rect.width + 'px';
+      clone.style.height = rect.height + 'px';
+      document.body.appendChild(clone);
+      animateTarget = clone;
+    }
+    
+    // Ẩn đối tượng thật để nhường chỗ cho bóng ma
+    el.style.opacity = '0';
+    
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = -cx;
+    const dy = window.innerHeight - cy;
+    
+    const angleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+    animateTarget.style.transformOrigin = 'center';
+    
+    animateTarget.animate([
+      { transform: 'translate(0, 0) scale(1)', opacity: 1, filter: 'blur(0px)', offset: 0 },
+      { transform: 'translate(0, 0) scale(1.05, 0.9) skew(10deg)', opacity: 1, filter: 'blur(1px)', offset: 0.1 },
+      { transform: 'translate(0, 0) scale(0.9, 1.1) skew(-10deg)', opacity: 1, filter: 'blur(1px)', offset: 0.2 },
+      { transform: 'translate(0, 0) scale(1.1, 0.85) skew(15deg)', opacity: 1, filter: 'blur(2px)', offset: 0.3 },
+      { transform: `translate(${dx * 0.2}px, ${dy * 0.2}px) rotate(${angleDeg}deg) scale(2, 0.4)`, opacity: 0.9, filter: 'blur(4px)', offset: 0.5 },
+      { transform: `translate(${dx * 0.6}px, ${dy * 0.6}px) rotate(${angleDeg}deg) scale(6, 0.05)`, opacity: 0.6, filter: 'blur(8px)', offset: 0.8 },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${angleDeg}deg) scale(0, 0)`, opacity: 0, filter: 'blur(12px)', offset: 1 }
+    ], {
+      duration: 1000,
+      easing: 'ease-in',
+      fill: 'forwards'
+    });
+    
+    setTimeout(() => {
+      if (animateTarget && animateTarget.parentNode) {
+        animateTarget.parentNode.removeChild(animateTarget);
+      }
+      callback();
+    }, 1000);
+  };
+
   const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const colorPalette = [
     "bg-red-500", "bg-teal-500", "bg-green-500", "bg-yellow-500",
@@ -171,7 +255,7 @@ var AppUI = (() => {
     if (appState.customers.length === 0) return void (root.innerHTML = `<div class="rounded border p-3 text-center text-sm text-slate-100">Trống.</div>`);
     root.innerHTML = appState.customers.map((c) => {
       const hasSeg = c.sets.some((s) => s.segments.some((g) => Number(g.lengthMm) > 0 && Number(g.quantity) > 0));
-      return `<div style="background: linear-gradient(to right, rgba(51, 65, 85, 0.5), rgba(55, 85, 135, 0.5));" class="mb-4 rounded border border-slate-500 p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
+      return `<div id="customer_${c.id}" style="background: linear-gradient(to right, rgba(51, 65, 85, 0.5), rgba(55, 85, 135, 0.5));" class="mb-4 rounded border border-slate-500 p-3 ${c.isCollapsed ? `` : `col-span-3 order-first`}">
         <div class="flex items-center justify-between">
           <b class="cursor-pointer text-slate-100" onclick="toggleCustomerCollapse('${c.id}')">Tên: ${esc(c.name)}</b>
           <div class="flex gap-2">
@@ -189,7 +273,7 @@ var AppUI = (() => {
               </svg>`}
             </button>
             ${c.isCollapsed ? `` :
-          `<button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-sm text-white" onclick="deleteCustomer('${c.id}')">
+          `<button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-sm text-white" onclick="window.animateAndDelete('customer_${c.id}', () => deleteCustomer('${c.id}'))">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="size-6">
                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -211,10 +295,10 @@ var AppUI = (() => {
           </div>
           <div class="mt-2 space-y-2">
             ${c.sets.length === 0 ? `<p class="text-sm italic text-slate-500 text-center">Trống.</p>` : c.sets.map((s) => `
-            <div style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-2">
+            <div id="set_${s.id}" style="background-color: rgb(51, 65, 85, 0.5);" class="rounded border border-slate-500 p-2">
               <div class="mb-2 flex items-center justify-between">
                 <b class="text-slate-100">${esc(s.name)}</b>
-                <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="deleteSet('${c.id}','${s.id}')">
+                <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="window.animateAndDelete('set_${s.id}', () => deleteSet('${c.id}','${s.id}'))">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                       stroke="currentColor" class="size-6">
                       <path stroke-linecap="round" stroke-linejoin="round"
@@ -248,7 +332,7 @@ var AppUI = (() => {
                     </thead>
                     <tbody>
                       ${s.segments.map((g) => `
-                        <tr>
+                        <tr id="segment_${g.id}">
                           <td class="w-full flex gap-2">
                             <input type="range" name="length_mm" min="1" max="${BAR_LENGTH_MM}" value="${Number(g.lengthMm) || 0}"
                               onchange="updateSegment('${c.id}','${s.id}','${g.id}','lengthMm',this.value)" class="w-full">
@@ -264,7 +348,7 @@ var AppUI = (() => {
                             </select>
                           </td>
                           <td class="">
-                              <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="deleteSegment('${c.id}','${s.id}','${g.id}')">
+                              <button class="rounded bg-pink-800 hover:bg-pink-600 px-2 py-1 text-xs text-white" onclick="window.animateAndDelete('segment_${g.id}', () => deleteSegment('${c.id}','${s.id}','${g.id}'))">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                   stroke="currentColor" class="size-6">
                                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -284,6 +368,30 @@ var AppUI = (() => {
         `}
       </div>`;
     }).join("");
+    
+    // Thêm hiệu ứng phóng to (zoom-in) cho đối tượng mới tạo
+    if (window.lastCreatedId) {
+      setTimeout(() => {
+        const el = document.getElementById(window.lastCreatedId);
+        if (el) {
+          // Tự động cuộn màn hình đến đối tượng vừa tạo
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // Hiệu ứng nảy (bounce/zoom)
+          el.style.transformOrigin = 'center';
+          el.animate([
+            { transform: 'scale(0)', opacity: 0 },
+            { transform: 'scale(1.02)', opacity: 1, offset: 0.8 },
+            { transform: 'scale(1)', opacity: 1, offset: 1 }
+          ], {
+            duration: 400,
+            easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)', // Hiệu ứng nảy lùi nhẹ
+            fill: 'forwards'
+          });
+        }
+        window.lastCreatedId = null;
+      }, 10);
+    }
   }
 
   return { render, renderOptimization, handleAddSet, handleAddSegment };

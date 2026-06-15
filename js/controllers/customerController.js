@@ -2,12 +2,14 @@ const CustomerController = (() => {
     const { appState, uid, saveState, findCustomer, findSet, BAR_LENGTH_MM } = window.AppData;
 
     function createCustomer(name) {
+        const id = uid("cus");
         appState.customers.push({
-            id: uid("cus"),
+            id: id,
             name,
             isCollapsed: false,
             sets: []
         });
+        window.lastCreatedId = 'customer_' + id;
         saveState();
         window.AppUI.render();
     }
@@ -29,11 +31,13 @@ const CustomerController = (() => {
     function addSet(customerId, setName) {
         const customer = findCustomer(customerId);
         if (!customer) return;
+        const id = uid("set");
         customer.sets.push({
-            id: uid("set"),
+            id: id,
             name: setName,
             segments: []
         });
+        window.lastCreatedId = 'set_' + id;
         saveState();
         window.AppUI.render();
     }
@@ -50,12 +54,14 @@ const CustomerController = (() => {
         const set = findSet(customerId, setId);
         if (!set) return;
         const safeLength = Math.min(Number(lengthMm) || 0, BAR_LENGTH_MM);
+        const id = uid("seg");
         set.segments.push({
-            id: uid("seg"),
+            id: id,
             lengthMm: safeLength,
             quantity: Number(quantity) || 0,
             segmentType: segmentType
         });
+        window.lastCreatedId = 'segment_' + id;
         saveState();
         window.AppUI.render();
     }
